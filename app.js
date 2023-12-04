@@ -46,8 +46,8 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://backend-api-0pbl.onrender.com",
-    // origin: 'http://localhost:3000',
+    // origin: "*",
+    origin: 'http://localhost:3000',
 
     methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
 
