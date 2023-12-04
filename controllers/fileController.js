@@ -41,7 +41,8 @@ exports.fileUpload = catchAsync(async (req, res, next) => {
   
         res.status(200).json({
           // data: newFile,
-          image_url: `http://localhost:3001/uploads/${req.file.filename}`,
+          // image_url: `http://localhost:3001/uploads/${req.file.filename}`,
+          image_url: `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`,
           status: 'success',
           message: 'File uploaded successfully',
         });

@@ -75,7 +75,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
       // If a file is uploaded, update the avatar property
       if (req.file) {
-        filteredBody.avatar = `http://localhost:3001/uploads/${req.file.filename}`;
+        filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
       }
 
       // Update the user document
