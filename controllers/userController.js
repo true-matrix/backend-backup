@@ -43,7 +43,7 @@ exports.getMe = catchAsync(async (req, res, next) => {
 // });
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, 'https://backend-api-0pbl.onrender.com/uploads/');
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);

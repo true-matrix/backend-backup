@@ -290,7 +290,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) Send it to user's email
   try {
-    const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
+    // const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
+    const resetURL = `https://wolf.blutrain.net/auth/new-password?token=${resetToken}`;
     // TODO => Send Email with this Reset URL to user's email address
 
     console.log(resetURL);
