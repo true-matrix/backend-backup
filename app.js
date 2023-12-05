@@ -100,7 +100,7 @@ app.use(
 
 // app.use('/uploads', express.static('uploads'))
 app.use('/uploads', express.static('uploads'), (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://backend-api-0pbl.onrender.com'); // Specify your client's domain
+  res.setHeader('Access-Control-Allow-Origin', 'https://wolf.blutrain.net'); // Specify your client's domain
 // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE,PATCH');
 // res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 // res.setHeader('Access-Control-Allow-Credentials', 'true'); 
