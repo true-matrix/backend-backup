@@ -240,16 +240,38 @@ exports.logout = catchAsync(async (req, res, next) => {
   })
   
 exports.getAllVerifiedOmegas = catchAsync(async (req, res, next) => {
-    const all_users = await Omega.find({
+  let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
+    if (!token) {
+      return res.status(401).json({ message: 'User is already logged out!!!' });
+    }
+
+    let remaining_users;
+    try{
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+      // Assuming user.userId is present in the decoded JWT payload
+      const userId = user.userId;
+      const all_users = await Omega.find({
       verified: true,
     }).select("name gender _id");
     console.log('all_users',all_users);
-    console.log('req',req.user);
+    // console.log('req',req);
 
   
-    const remaining_users = all_users.filter(
-      (user) => user._id.toString() !== req.user._id.toString()
+    remaining_users = all_users.filter(
+      (user) => user._id.toString() !== userId
     );
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
   
     res.status(200).json({
       status: "success",
