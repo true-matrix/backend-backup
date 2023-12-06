@@ -208,40 +208,31 @@ exports.logout = catchAsync(async (req, res, next) => {
       console.log("token",token)
       return res.status(401).json({ message: 'User is already logged out' });
     }
-    const verifyUser = jwt.verify(token, process.env.JWT_SECRET)
-  
-    // console.log("verifyUser=>",verifyUser)
-  
-    // const existing_user = await User.findOne({ _id: verifyUser.userId });
-    // req.user = existing_user;
-    // console.log("existing_user",existing_user)
-  
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) {
-        console.log("err",err)
-        return res.status(403).json({ message: 'Invalid token' });
-      }
-      console.log("user",user)
-      req.user = user;
-    // const existing_user = Omega.findOne({ _id: user.userId });
-    //   console.log('existing_user',existing_user);
     try {
-      Omega.findByIdAndUpdate(user.userId, {
-        verified : false,
-        otp:undefined
-      });
-    } catch (e) {
-      console.log(e);
-    }
-      
+      const user = jwt.verify(token, process.env.JWT_SECRET);
+  
+      // Assuming user.userId is present in the decoded JWT payload
+      const userId = user.userId;
+  
+      // Update the 'verified' field to false in MongoDB
+      const updatedUser = await Omega.findByIdAndUpdate(
+        userId,
+        { $set: { verified: false } },
+        { new: true } // Return the updated document
+      );
+  
+      // Continue with the next middleware or route handler
+      req.user = updatedUser;
       next();
-    });
+    } catch (error) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+    }
 
     
   
     // res.clearCookie("jwt");
     // res.redirect('/login');
-    
+    console.log('okk',res);
     res.status(200).json({
       status: "success",
       message: "Logout successfully!",
