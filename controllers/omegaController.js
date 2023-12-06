@@ -232,7 +232,6 @@ exports.logout = catchAsync(async (req, res, next) => {
   
     // res.clearCookie("jwt");
     // res.redirect('/login');
-    console.log('okk',res);
     res.status(200).json({
       status: "success",
       message: "Logout successfully!",
