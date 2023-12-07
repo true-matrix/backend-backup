@@ -15,90 +15,322 @@ const catchAsync = require("../utils/catchAsync");
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 
 
-exports.logout = catchAsync(async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  } else if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
-  if (!token) {
-    console.log("token",token)
-    return res.status(401).json({ message: 'User is already logged out' });
-  }
-  const verifyUser = jwt.verify(token, process.env.JWT_SECRET)
+// exports.logout = catchAsync(async (req, res, next) => {
+//   let token;
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith("Bearer")
+//   ) {
+//     token = req.headers.authorization.split(" ")[1];
+//   } else if (req.cookies.jwt) {
+//     token = req.cookies.jwt;
+//   }
+//   if (!token) {
+//     console.log("token",token)
+//     return res.status(401).json({ message: 'User is already logged out' });
+//   }
+//   const verifyUser = jwt.verify(token, process.env.JWT_SECRET)
 
-  // console.log("verifyUser=>",verifyUser)
+//   // console.log("verifyUser=>",verifyUser)
 
-  // const existing_user = await User.findOne({ _id: verifyUser.userId });
-  // req.user = existing_user;
-  // console.log("existing_user",existing_user)
+//   // const existing_user = await User.findOne({ _id: verifyUser.userId });
+//   // req.user = existing_user;
+//   // console.log("existing_user",existing_user)
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      console.log("err",err)
-      return res.status(403).json({ message: 'Invalid token' });
-    }
-    console.log("user",user)
-    req.user = user;
-    next();
-  });
+//   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+//     if (err) {
+//       console.log("err",err)
+//       return res.status(403).json({ message: 'Invalid token' });
+//     }
+//     console.log("user",user)
+//     req.user = user;
+//     next();
+//   });
 
-  // res.clearCookie("jwt");
-  // res.redirect('/login');
+//   // res.clearCookie("jwt");
+//   // res.redirect('/login');
   
-  res.status(200).json({
-    status: "success",
-    message: "Logout successfully!",
-  });
+//   res.status(200).json({
+//     status: "success",
+//     message: "Logout successfully!",
+//   });
 
-})
+// })
 
 // Register New User
 
-exports.register = catchAsync(async (req, res, next) => {
-  const { firstName, lastName, email, password } = req.body;
+// exports.register = catchAsync(async (req, res, next) => {
+//   const { firstName, lastName, email, password } = req.body;
+
+//   const filteredBody = filterObj(
+//     req.body,
+//     "firstName",
+//     "lastName",
+//     "email",
+//     "password"
+//   );
+
+//   // check if a verified user with given email exists
+
+//   const existing_user = await User.findOne({ email: email });
+
+//   if (existing_user && existing_user.verified) {
+//     // user with this email already exists, Please login
+//     return res.status(400).json({
+//       status: "error",
+//       message: "Email already in use, Please login.",
+//     });
+//   } else if (existing_user) {
+//     // if not verified than update prev one
+
+//     await User.findOneAndUpdate({ email: email }, filteredBody, {
+//       new: true,
+//       validateModifiedOnly: true,
+//     });
+
+//     // generate an otp and send to email
+//     req.userId = existing_user._id;
+//     next();
+//   } else {
+//     // if user is not created before than create a new one
+//     const new_user = await User.create(filteredBody);
+
+//     // generate an otp and send to email
+//     req.userId = new_user._id;
+//     next();
+//   }
+// });
+
+// exports.sendOTP = catchAsync(async (req, res, next) => {
+//   const { userId } = req;
+//   const new_otp = otpGenerator.generate(4, {
+//     digits: true,
+//     upperCaseAlphabets: false,
+//     specialChars: false,
+//     lowerCaseAlphabets: false,
+//     lowerCaseAlphabets: false, 
+//     upperCaseAlphabets: false
+//   });
+
+//   const otp_expiry_time = Date.now() + 10 * 60 * 1000; // otp validation : 10 Mins after otp is sent
+
+//   const user = await User.findByIdAndUpdate(userId, {
+//     otp_expiry_time: otp_expiry_time,
+//   });
+
+//   user.otp = new_otp.toString();
+
+//   await user.save({ new: true, validateModifiedOnly: true });
+
+//   console.log(new_otp);
+
+//   // TODO send mail
+//   mailService.sendEmail({
+//     from: "rajesh.truematrix@gmail.com",
+//     to: user.email,
+//     subject: "Verification OTP",
+//     html: otp(user.firstName, new_otp),
+//     attachments: [],
+//   });
+
+//   res.status(200).json({
+//     status: "success",
+//     message: "OTP Sent Successfully!",
+//     // email: req?.body?.email,
+//     email: user.email,
+//   });
+// });
+
+// exports.verifyOTP = catchAsync(async (req, res, next) => {
+//   // verify otp and update user accordingly
+//   const { email, otp } = req.body;
+//   const user = await User.findOne({
+//     email,
+//     otp_expiry_time: { $gt: Date.now() },
+//   });
+
+//   if (!user) {
+//     return res.status(400).json({
+//       status: "error",
+//       message: "Email is invalid or OTP expired",
+//     });
+//   }
+
+//   if (user.verified) {
+//     return res.status(400).json({
+//       status: "error",
+//       message: "Email is already verified",
+//     });
+//   }
+
+//   if (!(await user.correctOTP(otp, user.otp))) {
+//     res.status(400).json({
+//       status: "error",
+//       message: "OTP is incorrect",
+//     });
+
+//     return;
+//   }
+
+//   // OTP is correct
+
+//   user.verified = true;
+//   user.otp = undefined;
+//   await user.save({ new: true, validateModifiedOnly: true });
+
+//   const token = signToken(user._id);
+
+//   res.status(200).json({
+//     status: "success",
+//     message: "OTP verified Successfully!",
+//     token,
+//     user_id: user._id,
+//   });
+// });
+
+// User Login
+// exports.login = catchAsync(async (req, res, next) => {
+//   const { email, password } = req.body;
+
+//   if (!email || !password) {
+//     res.status(400).json({
+//       status: "error",
+//       message: "Both email and password are required",
+//     });
+//     return;
+//   }
+
+//   const user = await User.findOne({ email: email }).select("+password");
+//   if (!user || !user.password) {
+//     res.status(400).json({
+//       status: "error",
+//       message: "Incorrect password",
+//     });
+
+//     return;
+//   }
+
+//   if (!user || !(await user.correctPassword(password, user.password))) {
+//   // if (!user || user.password !== password) {
+//     console.log('user',user);
+//     res.status(400).json({
+//       status: "error",
+//       message: "Email or password is incorrect",
+//     });
+
+//     return;
+//   }
+
+//   const token = signToken(user._id);
+
+//   res.status(200).json({
+//     status: "success",
+//     message: "Logged in successfully!",
+//     token,
+//     user_id: user._id,
+//   });
+// });
+
+exports.addUser = catchAsync(async (req, res, next) => {
+  try{
+  const { email, phone } = req.body;
 
   const filteredBody = filterObj(
     req.body,
-    "firstName",
-    "lastName",
+    "name",
     "email",
-    "password"
+    "password",
+    "phone",
+    "gender"
   );
 
   // check if a verified user with given email exists
 
   const existing_user = await User.findOne({ email: email });
 
-  if (existing_user && existing_user.verified) {
+  if (existing_user) {
     // user with this email already exists, Please login
     return res.status(400).json({
       status: "error",
-      message: "Email already in use, Please login.",
+      message: "User already exists",
     });
-  } else if (existing_user) {
-    // if not verified than update prev one
-
-    await User.findOneAndUpdate({ email: email }, filteredBody, {
-      new: true,
-      validateModifiedOnly: true,
-    });
-
-    // generate an otp and send to email
-    req.userId = existing_user._id;
-    next();
   } else {
     // if user is not created before than create a new one
     const new_user = await User.create(filteredBody);
+    return res.status(201).json(new_user);
+    // generate an otp and send to email
+  }}catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  // const filteredBody = filterObj(
+  //   req.body,
+  //   "email",
+  //   "password",
+  // );
+
+  if (!email || !password) {
+    res.status(400).json({
+      status: "error",
+      message: "Both email and password are required",
+    });
+    return;
+  }
+
+  const user = await User.findOne({ email: email }).select("+password");
+  if (!user || !user.password) {
+    res.status(400).json({
+      status: "error",
+      message: "Incorrect password",
+    });
+
+    return;
+  }
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+  // if (!user || user.password !== password) {
+    console.log('omega',user);
+    res.status(400).json({
+      status: "error",
+      message: "Email or password is incorrect",
+    });
+
+    return;
+  }
+
+  // const token = signToken(user._id);
+
+  // res.status(200).json({
+  //   status: "success",
+  //   message: "Logged in successfully!",
+  //   // token,
+  //   // user_id: user._id,
+  // });
+  if (user || (await user.correctPassword(password, user.password))) {
+  // if (user && (user.password === password)) {
+
+    // await User.findOneAndUpdate({ email: email }, filteredBody, {
+    //   new: true,
+    //   validateModifiedOnly: true,
+    // });
 
     // generate an otp and send to email
-    req.userId = new_user._id;
+    req.userId = user._id;
     next();
   }
+
+  // const token = signToken(user._id);
+
+  // res.status(200).json({
+  //   status: "success",
+  //   message: "Logged in successfully!",
+  //   token,
+  //   user_id: user._id,
+  // });
 });
 
 exports.sendOTP = catchAsync(async (req, res, next) => {
@@ -122,14 +354,15 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   await user.save({ new: true, validateModifiedOnly: true });
 
-  console.log(new_otp);
+  console.log("new_otp",new_otp);
 
   // TODO send mail
   mailService.sendEmail({
     from: "rajesh.truematrix@gmail.com",
-    to: user.email,
+    // to: user.email,
+    to: "vishwajeet.blutrain@gmail.com",
     subject: "Verification OTP",
-    html: otp(user.firstName, new_otp),
+    html: otp(user.name, new_otp),
     attachments: [],
   });
 
@@ -164,6 +397,8 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   }
 
   if (!(await user.correctOTP(otp, user.otp))) {
+  // if (otp !== user.otp) {
+
     res.status(400).json({
       status: "error",
       message: "OTP is incorrect",
@@ -188,48 +423,50 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   });
 });
 
-// User Login
-exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+exports.logout = catchAsync(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    console.log("token",token)
+    return res.status(401).json({ message: 'User is already logged out' });
+  }
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
 
-  if (!email || !password) {
-    res.status(400).json({
-      status: "error",
-      message: "Both email and password are required",
-    });
-    return;
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+
+    // Update the 'verified' field to false in MongoDB
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: { verified: false } },
+      { new: true } // Return the updated document
+    );
+
+    // Continue with the next middleware or route handler
+    req.user = updatedUser;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
   }
 
-  const user = await User.findOne({ email: email }).select("+password");
-  if (!user || !user.password) {
-    res.status(400).json({
-      status: "error",
-      message: "Incorrect password",
-    });
+  
 
-    return;
-  }
-
-  if (!user || !(await user.correctPassword(password, user.password))) {
-  // if (!user || user.password !== password) {
-    console.log('user',user);
-    res.status(400).json({
-      status: "error",
-      message: "Email or password is incorrect",
-    });
-
-    return;
-  }
-
-  const token = signToken(user._id);
-
+  // res.clearCookie("jwt");
+  // res.redirect('/login');
   res.status(200).json({
     status: "success",
-    message: "Logged in successfully!",
-    token,
-    user_id: user._id,
+    message: "Logout successfully!",
   });
-});
+
+})
 
 // Protect
 exports.protect = catchAsync(async (req, res, next) => {
