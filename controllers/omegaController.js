@@ -1,5 +1,6 @@
 // controllers/UserController.js
 const jwt = require("jsonwebtoken");
+const { ObjectId } = require('mongodb');
 const otpGenerator = require("otp-generator");
 const mailService = require("../services/mailer");
 const otp = require("../Templates/Mail/otp");
@@ -10,6 +11,21 @@ const catchAsync = require("../utils/catchAsync");
 
 // this function will return you jwt token
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
+
+const  extractUserId = (req) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  const user = jwt.verify(token, process.env.JWT_SECRET);
+  return user.userId;
+}
 
 
 exports.addOmega = catchAsync(async (req, res, next) => {
@@ -238,7 +254,42 @@ exports.logout = catchAsync(async (req, res, next) => {
     });
   
   })
+exports.getUserById = catchAsync(async (req, res, next) => {
+    // const all_users = await User.find({
+    //   verified: true,
+    // }).select("name _id");
   
+    // const this_user = req.user;
+  
+    // const remaining_users = all_users.filter(
+    //   (user) =>
+    //     !this_user.friends.includes(user._id) &&
+    //     user._id.toString() !== req.user._id.toString()
+    // );
+    const { userId } = req.params;
+    // const userId = extractUserId(req);
+    try {
+      const user = await Omega.findOne({ _id: userId });
+      if (user) {
+        res.status(200).json({
+          status: 'success',
+          data: user,
+          message: 'User found successfully!',
+        });
+      } else {
+        res.status(404).json({
+          status: 'error',
+          message: 'User not found',
+        });
+      }
+    } catch (error) {
+      console.error('Error getting user by userId', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Internal server error',
+      });
+    }
+  });
 exports.getAllVerifiedOmegas = catchAsync(async (req, res, next) => {
   let token;
     if (
@@ -279,4 +330,15 @@ exports.getAllVerifiedOmegas = catchAsync(async (req, res, next) => {
       message: "Users found successfully!",
     });
   });
+
+exports.searchUsers = catchAsync(async (req, res) => {
+    const { name } = req.query;
+  
+    try {
+      const users = await Omega.find({ name: new RegExp(name, 'i') });
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });  
   
