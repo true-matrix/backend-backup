@@ -122,40 +122,40 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 });
 
 
-exports.getUsers = catchAsync(async (req, res, next) => {
-  const all_users = await User.find({
-    verified: true,
-  }).select("firstName lastName _id");
+// exports.getUsers = catchAsync(async (req, res, next) => {
+//   const all_users = await User.find({
+//     verified: true,
+//   }).select("firstName lastName _id");
 
-  const this_user = req.user;
+//   const this_user = req.user;
 
-  const remaining_users = all_users.filter(
-    (user) =>
-      !this_user.friends.includes(user._id) &&
-      user._id.toString() !== req.user._id.toString()
-  );
+//   const remaining_users = all_users.filter(
+//     (user) =>
+//       !this_user.friends.includes(user._id) &&
+//       user._id.toString() !== req.user._id.toString()
+//   );
 
-  res.status(200).json({
-    status: "success",
-    data: remaining_users,
-    message: "Users found successfully!",
-  });
-});
+//   res.status(200).json({
+//     status: "success",
+//     data: remaining_users,
+//     message: "Users found successfully!",
+//   });
+// });
 
-exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
-  const all_users = await User.find({
-    verified: true,
-  }).select("firstName lastName _id");
-const remaining_users = all_users.filter(
-    (user) => user._id.toString() !== req.user._id.toString()
-  );
+// exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
+//   const all_users = await User.find({
+//     verified: true,
+//   }).select("firstName lastName _id");
+// const remaining_users = all_users.filter(
+//     (user) => user._id.toString() !== req.user._id.toString()
+//   );
 
-  res.status(200).json({
-    status: "success",
-    data: remaining_users,
-    message: "Users found successfully!",
-  });
-});
+//   res.status(200).json({
+//     status: "success",
+//     data: remaining_users,
+//     message: "Users found successfully!",
+//   });
+// });
 
 exports.getRequests = catchAsync(async (req, res, next) => {
   const requests = await FriendRequest.find({ recipient: req.user._id })
@@ -616,7 +616,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
     });
   }
 });
-exports.getAllVerifiedOmegas = catchAsync(async (req, res, next) => {
+exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
 let token;
   if (
     req.headers.authorization &&
