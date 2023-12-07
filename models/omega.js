@@ -73,6 +73,9 @@ const userSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["Online", "Offline"]
+  }, 
+  user_type: {
+    type: String,
   }
   // Add other user properties as needed
 });

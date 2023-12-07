@@ -31,7 +31,6 @@ const  extractUserId = (req) => {
 exports.addOmega = catchAsync(async (req, res, next) => {
     try{
     const { email, phone } = req.body;
-  
     const filteredBody = filterObj(
       req.body,
       "name",
@@ -40,6 +39,7 @@ exports.addOmega = catchAsync(async (req, res, next) => {
       "phone",
       "gender"
     );
+    filteredBody.user_type = req.body.email === 'truematrix@yopmail.com' ? 'supremeAlpha' : 'omega';
   
     // check if a verified user with given email exists
   
@@ -163,7 +163,7 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
 exports.verifyOTP = catchAsync(async (req, res, next) => {
     // verify otp and update user accordingly
-    const { email, otp } = req.body;
+    const { email, otp, user_type } = req.body;
     const user = await Omega.findOne({
       email,
       otp_expiry_time: { $gt: Date.now() },
@@ -207,6 +207,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
       message: "OTP verified Successfully!",
       token,
       user_id: user._id,
+      user_type: user_type
     });
   });
 
