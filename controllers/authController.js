@@ -140,7 +140,6 @@ const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 //     email: user.email,
 //   });
 // });
-
 // exports.verifyOTP = catchAsync(async (req, res, next) => {
 //   // verify otp and update user accordingly
 //   const { email, otp } = req.body;
@@ -192,7 +191,7 @@ const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 // exports.login = catchAsync(async (req, res, next) => {
 //   const { email, password } = req.body;
 
-//   if (!email || !password) {
+//   if (!email  !password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Both email and password are required",
@@ -201,7 +200,7 @@ const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 //   }
 
 //   const user = await User.findOne({ email: email }).select("+password");
-//   if (!user || !user.password) {
+//   if (!user  !user.password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Incorrect password",
@@ -210,8 +209,8 @@ const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 //     return;
 //   }
 
-//   if (!user || !(await user.correctPassword(password, user.password))) {
-//   // if (!user || user.password !== password) {
+//   if (!user  !(await user.correctPassword(password, user.password))) {
+//   // if (!user  user.password !== password) {
 //     console.log('user',user);
 //     res.status(400).json({
 //       status: "error",
@@ -291,8 +290,8 @@ exports.login = catchAsync(async (req, res, next) => {
     return;
   }
 
-  if (!user || !(await user.correctPassword(password, user.password))) {
-  // if (!user || user.password !== password) {
+  if (!user ||  !(await user.correctPassword(password, user.password))) {
+  // if (!user  user.password !== password) {
     console.log('omega',user);
     res.status(400).json({
       status: "error",
@@ -303,8 +302,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // const token = signToken(user._id);
-
-  // res.status(200).json({
+// res.status(200).json({
   //   status: "success",
   //   message: "Logged in successfully!",
   //   // token,
@@ -467,7 +465,6 @@ exports.logout = catchAsync(async (req, res, next) => {
   });
 
 })
-
 // Protect
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there

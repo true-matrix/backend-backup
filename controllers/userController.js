@@ -146,8 +146,7 @@ exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
   const all_users = await User.find({
     verified: true,
   }).select("firstName lastName _id");
-
-  const remaining_users = all_users.filter(
+const remaining_users = all_users.filter(
     (user) => user._id.toString() !== req.user._id.toString()
   );
 
@@ -306,8 +305,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
     } else {
       // incoming
       const other_user = elm.from;
-
-      // outgoing
+// outgoing
       call_logs.push({
         id: elm._id,
         img: other_user.avatar,
@@ -400,7 +398,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //     "password",
 //   );
 
-//   if (!email || !password) {
+//   if (!email  !password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Both email and password are required",
@@ -409,7 +407,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //   }
 
 //   const user = await User.findOne({ email: email }).select("+password");
-//   if (!user || !user.password) {
+//   if (!user  !user.password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Incorrect password",
@@ -418,8 +416,8 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //     return;
 //   }
 
-//   // if (!user || !(await user.correctPassword(password, user.password))) {
-//   if (!user || user.password !== password) {
+//   // if (!user  !(await user.correctPassword(password, user.password))) {
+//   if (!user  user.password !== password) {
 //     console.log('omega',user);
 //     res.status(400).json({
 //       status: "error",
@@ -472,7 +470,6 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //   await user.save({ new: true, validateModifiedOnly: true });
 
 //   console.log(new_otp);
-
 //   // TODO send mail
 //   mailService.sendEmail({
 //     from: "rajesh.truematrix@gmail.com",
@@ -590,8 +587,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   // }).select("name _id");
 
   // const this_user = req.user;
-
-  // const remaining_users = all_users.filter(
+// const remaining_users = all_users.filter(
   //   (user) =>
   //     !this_user.friends.includes(user._id) &&
   //     user._id.toString() !== req.user._id.toString()
