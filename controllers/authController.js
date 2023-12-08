@@ -374,6 +374,7 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
     message: "OTP Sent Successfully!",
     // email: req?.body?.email,
     email: user.email,
+    otp_send_time: user.otp_send_time,
   });
 });
 
