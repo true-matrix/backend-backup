@@ -256,7 +256,11 @@ exports.addUser = catchAsync(async (req, res, next) => {
   } else {
     // if user is not created before than create a new one
     const new_user = await User.create(filteredBody);
-    return res.status(201).json(new_user);
+    return res.status(201).json({
+      status: 'success',
+      data: new_user,
+      message: 'User added successfully',
+    });
     // generate an otp and send to email
   }}catch (error) {
       console.error(error);
