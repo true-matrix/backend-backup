@@ -350,6 +350,7 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   const user = await User.findByIdAndUpdate(userId, {
     otp_expiry_time: otp_expiry_time,
+    otp_send_time: new Date(),
   });
 
   user.otp = new_otp.toString();
@@ -424,6 +425,10 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     user_id: user._id,
   });
 });
+
+// exports.getOtpTime = catchAsync(async (req,res,next) =>{
+
+// })
 
 exports.logout = catchAsync(async (req, res, next) => {
   let token;
