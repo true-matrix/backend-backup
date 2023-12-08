@@ -30,6 +30,7 @@ router.post("/start-video-call", authController.protect, userController.startVid
 // router.post("/logout", userController.logout);
 
 router.get("/get-all-verified-users",authController.protect,  userController.getAllVerifiedUsers);
+router.get("/get-all-users",authController.protect,  userController.getAllUsers);
 router.get("/search-user", userController.searchUsers);
 router.get("/user-id/:id",authController.protect,  userController.getUserById);
 

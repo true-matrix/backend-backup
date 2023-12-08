@@ -92,8 +92,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       // Filter the body properties
       const filteredBody = filterObj(
         req.body,
-        'firstName',
-        'lastName',
+        'name',
         'about',
         'phone'
       );
@@ -657,6 +656,49 @@ let token;
     message: "Users found successfully!",
   });
 });
+
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
+    if (!token) {
+      return res.status(401).json({ message: 'User is already logged out!!!' });
+    }
+  
+    let remaining_users;
+    try{
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+      // Assuming user.userId is present in the decoded JWT payload
+      const userId = user.userId;
+      const all_users = await User.find();
+
+    //   const all_users = await User.find({
+    //   verified: true,
+    // }).select("name gender _id");
+    // console.log('all_users',all_users);
+    // console.log('req',req);
+  
+  
+    remaining_users = all_users.filter(
+      (user) => user._id.toString() !== userId
+    );
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+  
+    res.status(200).json({
+      status: "success",
+      data: remaining_users,
+      message: "Users found successfully!",
+    });
+  });
 
 exports.searchUsers = catchAsync(async (req, res) => {
   const { name } = req.query;
