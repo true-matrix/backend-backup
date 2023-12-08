@@ -31,6 +31,6 @@ router.post("/start-video-call", authController.protect, userController.startVid
 
 router.get("/get-all-verified-users",authController.protect,  userController.getAllVerifiedUsers);
 router.get("/search-user", userController.searchUsers);
-router.get("/:userId", userController.getUserById);
+router.get("/user-id/:id",authController.protect,  userController.getUserById);
 
 module.exports = router;

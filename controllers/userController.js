@@ -592,10 +592,11 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   //     !this_user.friends.includes(user._id) &&
   //     user._id.toString() !== req.user._id.toString()
   // );
-  const { userId } = req.params;
+  const { id } = req.params;
   // const userId = extractUserId(req);
   try {
-    const user = await User.findOne({ _id: userId });
+    const user = await User.findOne({ _id: id });
+    console.log('user',user);
     if (user) {
       res.status(200).json({
         status: 'success',
