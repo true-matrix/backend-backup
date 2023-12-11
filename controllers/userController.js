@@ -710,3 +710,45 @@ exports.searchUsers = catchAsync(async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// Function to update a user by admin
+exports.updateUser = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.userId; // Assuming you have a route parameter for the user _id
+
+    const updateFields = filterObj(
+      req.body,
+      'name',
+      'email',
+      'password',
+      'phone',
+      'gender'
+    );
+
+    // Check if the user with the given _id exists
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Update the user fields
+    Object.assign(existingUser, updateFields);
+
+    // Save the updated user
+    const updatedUser = await existingUser.save();
+
+    return res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+      message: 'User updated successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+

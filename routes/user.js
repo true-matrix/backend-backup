@@ -34,4 +34,8 @@ router.get("/get-all-users",authController.protect,  userController.getAllUsers)
 router.get("/search-user", userController.searchUsers);
 router.get("/user-id/:id",authController.protect,  userController.getUserById);
 
+//Update User by Admin
+router.post("/updateuser/:userId",authController.protect,  userController.updateUser);
+
+
 module.exports = router;
