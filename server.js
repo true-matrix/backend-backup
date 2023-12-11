@@ -32,8 +32,8 @@ const VideoCall = require("./models/videoCall");
 const io = new Server(server, {
   cors: {
     // origin: "*",
-    origin: "http://localhost:3000",
-    // origin: 'https://wolf.blutrain.net',
+    // origin: "http://localhost:3000",
+    origin: 'https://wolf.blutrain.net',
     methods: ["GET", "POST"],
   },
 });
