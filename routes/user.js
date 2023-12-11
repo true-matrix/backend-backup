@@ -15,7 +15,7 @@ router.get("/get-me", authController.protect, userController.getMe);
 router.patch("/update-me", authController.protect, userController.updateMe);
 router.post("/upload", authController.protect, fileController.fileUpload);
 // router.get('/:imageId',authController.protect, fileController.getImage);
-router.get("/get-all-verified-users", authController.protect, userController.getAllVerifiedUsers);
+// router.get("/get-all-verified-users", authController.protect, userController.getAllVerifiedUsers);
 // router.get("/get-users", authController.protect, userController.getUsers);
 router.get("/get-requests", authController.protect, userController.getRequests);
 router.get("/get-friends", authController.protect, userController.getFriends);
@@ -24,8 +24,9 @@ router.post("/start-audio-call", authController.protect, userController.startAud
 router.post("/start-video-call", authController.protect, userController.startVideoCall);
 
 
-// router.get("/get-all-verified-users", authController.protect, userController.getAllVerifiedUsers);
+router.get("/get-all-verified-users",authController.protect,  userController.getAllVerifiedUsers);
+router.get("/get-all-users",authController.protect,  userController.getAllUsers);
 router.get("/search-user", userController.searchUsers);
-router.get("/:userId", userController.getUserById);
+router.get("/user-id/:id",authController.protect,  userController.getUserById);
 
 module.exports = router;

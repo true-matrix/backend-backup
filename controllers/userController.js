@@ -92,8 +92,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       // Filter the body properties
       const filteredBody = filterObj(
         req.body,
-        'firstName',
-        'lastName',
+        'name',
         'about',
         'phone'
       );
@@ -142,21 +141,20 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 //   });
 // });
 
-exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
-  const all_users = await User.find({
-    verified: true,
-  }).select("name _id");
+// exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
+//   const all_users = await User.find({
+//     verified: true,
+//   }).select("firstName lastName _id");
+// const remaining_users = all_users.filter(
+//     (user) => user._id.toString() !== req.user._id.toString()
+//   );
 
-  const remaining_users = all_users.filter(
-    (user) => user._id.toString() !== req.user._id.toString()
-  );
-
-  res.status(200).json({
-    status: "success",
-    data: remaining_users,
-    message: "Users found successfully!",
-  });
-});
+//   res.status(200).json({
+//     status: "success",
+//     data: remaining_users,
+//     message: "Users found successfully!",
+//   });
+// });
 
 exports.getRequests = catchAsync(async (req, res, next) => {
   const requests = await FriendRequest.find({ recipient: req.user._id })
@@ -306,8 +304,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
     } else {
       // incoming
       const other_user = elm.from;
-
-      // outgoing
+// outgoing
       call_logs.push({
         id: elm._id,
         img: other_user.avatar,
@@ -400,7 +397,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //     "password",
 //   );
 
-//   if (!email || !password) {
+//   if (!email  !password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Both email and password are required",
@@ -409,7 +406,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //   }
 
 //   const user = await User.findOne({ email: email }).select("+password");
-//   if (!user || !user.password) {
+//   if (!user  !user.password) {
 //     res.status(400).json({
 //       status: "error",
 //       message: "Incorrect password",
@@ -418,8 +415,8 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //     return;
 //   }
 
-//   // if (!user || !(await user.correctPassword(password, user.password))) {
-//   if (!user || user.password !== password) {
+//   // if (!user  !(await user.correctPassword(password, user.password))) {
+//   if (!user  user.password !== password) {
 //     console.log('omega',user);
 //     res.status(400).json({
 //       status: "error",
@@ -472,7 +469,6 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
 //   await user.save({ new: true, validateModifiedOnly: true });
 
 //   console.log(new_otp);
-
 //   // TODO send mail
 //   mailService.sendEmail({
 //     from: "rajesh.truematrix@gmail.com",
@@ -590,16 +586,16 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   // }).select("name _id");
 
   // const this_user = req.user;
-
-  // const remaining_users = all_users.filter(
+// const remaining_users = all_users.filter(
   //   (user) =>
   //     !this_user.friends.includes(user._id) &&
   //     user._id.toString() !== req.user._id.toString()
   // );
-  const { userId } = req.params;
+  const { id } = req.params;
   // const userId = extractUserId(req);
   try {
-    const user = await User.findOne({ _id: userId });
+    const user = await User.findOne({ _id: id });
+    console.log('user',user);
     if (user) {
       res.status(200).json({
         status: 'success',
@@ -620,46 +616,89 @@ exports.getUserById = catchAsync(async (req, res, next) => {
     });
   }
 });
-// exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
-// let token;
-//   if (
-//     req.headers.authorization &&
-//     req.headers.authorization.startsWith("Bearer")
-//   ) {
-//     token = req.headers.authorization.split(" ")[1];
-//   } else if (req.cookies.jwt) {
-//     token = req.cookies.jwt;
-//   }
-//   if (!token) {
-//     return res.status(401).json({ message: 'User is already logged out!!!' });
-//   }
+exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
+let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
 
-//   let remaining_users;
-//   try{
-//   const user = jwt.verify(token, process.env.JWT_SECRET);
-//     // Assuming user.userId is present in the decoded JWT payload
-//     const userId = user.userId;
-//     const all_users = await User.find({
-//     verified: true,
-//   }).select("name gender _id");
-//   console.log('all_users',all_users);
-//   // console.log('req',req);
+  let remaining_users;
+  try{
+  const user = jwt.verify(token, process.env.JWT_SECRET);
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+    const all_users = await User.find({
+    verified: true,
+  }).select("name gender _id");
+  console.log('all_users',all_users);
+  // console.log('req',req);
 
 
-//   remaining_users = all_users.filter(
-//     (user) => user._id.toString() !== userId
-//   );
-//   next();
-// } catch (error) {
-//   return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-// }
+  remaining_users = all_users.filter(
+    (user) => user._id.toString() !== userId
+  );
+  next();
+} catch (error) {
+  return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+}
 
-//   res.status(200).json({
-//     status: "success",
-//     data: remaining_users,
-//     message: "Users found successfully!",
-//   });
-// });
+  res.status(200).json({
+    status: "success",
+    data: remaining_users,
+    message: "Users found successfully!",
+  });
+});
+
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
+    if (!token) {
+      return res.status(401).json({ message: 'User is already logged out!!!' });
+    }
+  
+    let remaining_users;
+    try{
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+      // Assuming user.userId is present in the decoded JWT payload
+      const userId = user.userId;
+      const all_users = await User.find();
+
+    //   const all_users = await User.find({
+    //   verified: true,
+    // }).select("name gender _id");
+    // console.log('all_users',all_users);
+    // console.log('req',req);
+  
+  
+    remaining_users = all_users.filter(
+      (user) => user._id.toString() !== userId
+    );
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+  
+    res.status(200).json({
+      status: "success",
+      data: remaining_users,
+      message: "Users found successfully!",
+    });
+  });
 
 exports.searchUsers = catchAsync(async (req, res) => {
   const { name } = req.query;
