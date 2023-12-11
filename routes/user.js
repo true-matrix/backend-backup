@@ -23,11 +23,6 @@ router.get("/get-friends", authController.protect, userController.getFriends);
 router.post("/start-audio-call", authController.protect, userController.startAudioCall);
 router.post("/start-video-call", authController.protect, userController.startVideoCall);
 
-// router.post("/addomega", userController.addOmega);
-// router.post("/login", userController.loginOmega, userController.sendOTP);
-// router.post("/send-otp", userController.sendOTP);
-// router.post("/verify", userController.verifyOTP);
-// router.post("/logout", userController.logout);
 
 router.get("/get-all-verified-users",authController.protect,  userController.getAllVerifiedUsers);
 router.get("/get-all-users",authController.protect,  userController.getAllUsers);
