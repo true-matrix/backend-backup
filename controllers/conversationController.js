@@ -2,25 +2,67 @@ const Conversation = require("../models/conversation");
 const catchAsync = require("../utils/catchAsync");
 
 // New Conversation
+// exports.newConversation = catchAsync(async (req, res, next) => {
+//     const newConversation = new Conversation({
+//         members : [req.body.senderId, req.body.receiverId]
+//       })
+//     try {
+//       const saveConversation = await newConversation.save();
+//       res.status(200).json({
+//         status: 'success',
+//         data: saveConversation,
+//         message: 'New conversation started',
+//       })
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({
+//         status: 'error',
+//         message: 'Internal server error',
+//       });
+//     }
+//   });
+
 exports.newConversation = catchAsync(async (req, res, next) => {
-    const newConversation = new Conversation({
-        members : [req.body.senderId, req.body.receiverId]
-      })
-    try {
-      const saveConversation = await newConversation.save();
-      res.status(200).json({
-        status: 'success',
-        data: saveConversation,
-        message: 'New conversation started',
-      })
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Internal server error',
-      });
-    }
+  const senderId = req.body.senderId;
+  const receiverId = req.body.receiverId;
+
+  // Check if a conversation already exists
+  const existingConversation = await Conversation.findOne({
+    members: {
+      $all: [senderId, receiverId],
+    },
   });
+
+  if (existingConversation) {
+    // Redirect to the existing conversation
+    return res.status(200).json({
+      status: 'success',
+      data: existingConversation,
+      message: 'Existing conversation found',
+    });
+  }
+
+  // If no existing conversation, create a new one
+  const newConversation = new Conversation({
+    members: [senderId, receiverId],
+  });
+
+  try {
+    const savedConversation = await newConversation.save();
+    res.status(200).json({
+      status: 'success',
+      data: savedConversation,
+      message: 'New conversation started',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+});
+
 
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
