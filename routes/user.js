@@ -3,6 +3,8 @@ const router = require("express").Router();
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
 const fileController = require("../controllers/fileController");
+const conversationController = require("../controllers/conversationController");
+const messageController = require("../controllers/messageController");
 // const imageController = require("../controllers/imageController");
 
 router.post(
@@ -31,6 +33,15 @@ router.get("/user-id/:id",authController.protect,  userController.getUserById);
 
 //Update User by Admin
 router.post("/updateuser/:userId",authController.protect,  userController.updateUser);
+
+//Conversation
+router.post("/conversations",authController.protect,  conversationController.newConversation);
+router.get("/conversations/:userId",authController.protect,  conversationController.getConversation);
+
+//Message
+router.post("/messages",authController.protect,  messageController.addMessage);
+router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
+
 
 
 module.exports = router;
