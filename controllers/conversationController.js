@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const Conversation = require("../models/conversation");
 const catchAsync = require("../utils/catchAsync");
 
@@ -107,20 +108,33 @@ exports.newConversation = catchAsync(async (req, res, next) => {
 
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
-  const authUserId = req.user._id;
-  const authIdString = authUserId.toString();
-  const uId = req.params.userId
-  let senderId = "";
-  console.log('authUserId',authUserId);
-  console.log('uId',uId);
-  if(uId == authIdString){
-    senderId = authIdString;
+  // const authUserId = req.user._id;
+  // const authIdString = authUserId.toString();
+  // const uId = req.params.userId
+  // let senderId = "";
+  // console.log('authUserId',authUserId);
+  // console.log('uId',uId);
+  // if(uId == authIdString){
+  //   senderId = authIdString;
+  // }
+  // console.log('senderId',senderId);
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
-  console.log('senderId',senderId);
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  const user = jwt.verify(token, process.env.JWT_SECRET);
+  console.log('user._id',user.userId);
+  console.log('req.params.userId',req.params.userId);
 
     try {
         const conversation = await Conversation.find({
-           members : {$in: [senderId]} 
+           members : {$all: [req.params.userId, user.userId]} 
         })
       res.status(200).json({
         status: 'success',
