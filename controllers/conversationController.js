@@ -70,9 +70,7 @@ exports.newConversation = catchAsync(async (req, res, next) => {
   // Use findOneAndUpdate with upsert option
   const existingConversation = await Conversation.findOneAndUpdate(
     {
-      members: {
-        $all: [senderId, receiverId],
-      },
+      members: { $all: [{ $elemMatch: { $eq: senderId } }, { $elemMatch: { $eq: receiverId } }] },
     },
     {}, // empty update, no actual changes to the document
     {
@@ -87,6 +85,7 @@ exports.newConversation = catchAsync(async (req, res, next) => {
     message: existingConversation ? 'Existing conversation found' : 'New conversation started',
   });
 });
+
 
 
 
