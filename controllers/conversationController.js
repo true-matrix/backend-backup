@@ -108,16 +108,6 @@ exports.newConversation = catchAsync(async (req, res, next) => {
 
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
-  // const authUserId = req.user._id;
-  // const authIdString = authUserId.toString();
-  // const uId = req.params.userId
-  // let senderId = "";
-  // console.log('authUserId',authUserId);
-  // console.log('uId',uId);
-  // if(uId == authIdString){
-  //   senderId = authIdString;
-  // }
-  // console.log('senderId',senderId);
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
@@ -129,8 +119,6 @@ exports.getConversation = catchAsync(async (req, res, next) => {
   }
 
   const user = jwt.verify(token, process.env.JWT_SECRET);
-  console.log('user._id',user.userId);
-  console.log('req.params.userId',req.params.userId);
 
     try {
         const conversation = await Conversation.find({
@@ -149,5 +137,43 @@ exports.getConversation = catchAsync(async (req, res, next) => {
       });
     }
   });
+
+  // Get All Conversations of a loggedin user
+  exports.getAllConversations = catchAsync(async (req, res, next) => {
+    // Extract token from headers or cookies
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
+  
+    // Check if token exists
+    if (!token) {
+      return res.status(401).json({ message: 'User is not authenticated' });
+    }
+  
+    // Verify the token and get user information
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+  
+    try {
+      // Find all conversations where the logged-in user is a member
+      const conversations = await Conversation.find({
+        members: user.userId,
+      });
+  
+      res.status(200).json({
+        status: 'success',
+        data: conversations,
+        message: 'Get all conversations successfully',
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Internal server error',
+      });
+    }
+  });  
 
   

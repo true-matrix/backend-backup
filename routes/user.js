@@ -37,6 +37,7 @@ router.post("/updateuser/:userId",authController.protect,  userController.update
 //Conversation
 router.post("/conversations",authController.protect,  conversationController.newConversation);
 router.get("/conversations/:userId",authController.protect,  conversationController.getConversation);
+router.get("/get-all-conversations",authController.protect,  conversationController.getAllConversations);
 
 //Message
 router.post("/messages",authController.protect,  messageController.addMessage);
