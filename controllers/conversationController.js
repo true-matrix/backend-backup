@@ -108,12 +108,13 @@ exports.newConversation = catchAsync(async (req, res, next) => {
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
   const authUserId = req.user._id;
+  const authIdString = authUserId.toString();
   const uId = req.params.userId
   let senderId = "";
   console.log('authUserId',authUserId);
   console.log('uId',uId);
-  if(uId == authUserId){
-    senderId = authUserId;
+  if(uId == authIdString){
+    senderId = authIdString;
   }
   console.log('senderId',senderId);
 
