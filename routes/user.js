@@ -38,6 +38,7 @@ router.post("/updateuser/:userId",authController.protect,  userController.update
 router.post("/conversations",authController.protect,  conversationController.newConversation);
 router.get("/conversations/:userId",authController.protect,  conversationController.getConversation);
 router.get("/get-all-conversations",authController.protect,  conversationController.getAllConversations);
+router.get("/get-all-chats-users",authController.protect,  conversationController.getAllChatsUsers);
 
 //Message
 router.post("/messages",authController.protect,  messageController.addMessage);

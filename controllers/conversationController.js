@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
+const axios = require('axios');
 const Conversation = require("../models/conversation");
+const User = require("../models/user");
 const catchAsync = require("../utils/catchAsync");
 
 // New Conversation
@@ -139,7 +141,7 @@ exports.getConversation = catchAsync(async (req, res, next) => {
   });
 
   // Get All Conversations of a loggedin user
-  exports.getAllConversations = catchAsync(async (req, res, next) => {
+exports.getAllConversations = catchAsync(async (req, res, next) => {
     // Extract token from headers or cookies
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -175,5 +177,55 @@ exports.getConversation = catchAsync(async (req, res, next) => {
       });
     }
   });  
+
+// Get All Chats Users
+exports.getAllChatsUsers = catchAsync(async (req, res, next) => {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
+  
+    if (!token) {
+      return res.status(401).json({ message: 'User is already logged out!!!' });
+    }
+  
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET);
+  
+      // Assuming user.userId is present in the decoded JWT payload
+      const userId = user.userId;
+  
+      // Call the getAllConversations API to get conversations
+      const conversationsResponse = await axios.get('https://backend-api-0pbl.onrender.com/user/get-all-conversations', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      // Extract user IDs from the conversations
+      const conversationMembers = conversationsResponse.data.data.reduce((members, conversation) => {
+        return members.concat(conversation.members);
+      }, []);
+  
+      // Remove duplicate user IDs
+      const uniqueUserIds = [...new Set(conversationMembers)];
+  
+      // Get all users except the logged-in user
+      const remainingUsers = await User.find({
+        _id: { $in: uniqueUserIds, $ne: userId }, // Exclude the logged-in user
+      }).select('name gender _id');
+  
+      res.status(200).json({
+        status: 'success',
+        data: remainingUsers,
+        message: 'Users found successfully!',
+      });
+    } catch (error) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+    }
+  });
+  
 
   
