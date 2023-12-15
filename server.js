@@ -68,6 +68,8 @@ io.on("connection", async (socket) => {
 
   console.log(`User connected ${socket.id}`);
 
+  socket.on("welcome",socket.id)
+
   if (user_id != null && Boolean(user_id)) {
     try {
       User.findByIdAndUpdate(user_id, {
