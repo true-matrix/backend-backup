@@ -484,3 +484,5 @@ process.on("unhandledRejection", (err) => {
     process.exit(1); //  Exit Code 1 indicates that a container shut down, either because of an application failure.
   });
 });
+
+module.exports = { app, server, io };
