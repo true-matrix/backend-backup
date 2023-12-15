@@ -1,17 +1,12 @@
 const Message = require("../models/message");
 const catchAsync = require("../utils/catchAsync");
 
-const { app, server, io } = require('../server'); 
 
 // Add Message
 exports.addMessage = catchAsync(async (req, res, next) => {
     const newMessage = new Message(req.body)
     try {
       const saveMessage = await newMessage.save();
-      io.emit('chat message', {
-        user: saveMessage.user,
-        message: saveMessage.message,
-      });
       res.status(200).json({
         status: 'success',
         data: saveMessage,
