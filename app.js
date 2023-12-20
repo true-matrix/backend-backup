@@ -79,11 +79,18 @@ app.use(
   })
 );
 
-app.use(helmet());
+// app.use(helmet());
 // app.use(helmet({
 //   crossOriginEmbedderPolicy: false,
 // }));
 // app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // Other helmet configurations...
+  })
+);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
