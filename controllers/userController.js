@@ -78,71 +78,39 @@ const storage = multer.diskStorage({
  
 const upload = multer({ storage: storage });
 
-// exports.updateMe = catchAsync(async (req, res, next) => {
-//   try {
-//     // Use the 'upload' middleware to handle the file
-//     upload.single('avatar')(req, res, async (err) => {
-//       if (err) {
-//         console.error(err);
-//         return res.status(500).json({
-//           status: 'error',
-//           message: 'File upload failed',
-//         });
-//       }
-
-//       // Filter the body properties
-//       const filteredBody = filterObj(
-//         req.body,
-//         'name',
-//         'about',
-//         'phone'
-//       );
-
-//       // If a file is uploaded, update the avatar property
-//       if (req.file) {
-//         filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
-//       }
-
-//       // Update the user document
-//       const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
-
-//       res.status(200).json({
-//         status: 'success',
-//         data: userDoc,
-//         message: 'User updated successfully',
-//       });
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       status: 'error',
-//       message: 'Internal server error',
-//     });
-//   }
-// });
-exports.updateMe = upload.single('avatar'), catchAsync(async (req, res, next) => {
+exports.updateMe = catchAsync(async (req, res, next) => {
   try {
-    // If a file is uploaded, update the avatar property
-    if (req.file) {
-      req.body.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
-    }
+    // Use the 'upload' middleware to handle the file
+    upload.single('avatar')(req, res, async (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          status: 'error',
+          message: 'File upload failed',
+        });
+      }
 
-    // Filter the body properties
-    const filteredBody = filterObj(
-      req.body,
-      'name',
-      'about',
-      'phone',
-      'avatar'
-    );
+      // Filter the body properties
+      const filteredBody = filterObj(
+        req.body,
+        'name',
+        'about',
+        'phone'
+      );
 
-    // Update the user document
-    const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
+      // If a file is uploaded, update the avatar property
+      if (req.file) {
+        filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
+      }
 
-    res.status(200).json({
-      status: 'success',
-      data: userDoc,
-      message: 'User updated successfully',
+      // Update the user document
+      const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
+
+      res.status(200).json({
+        status: 'success',
+        data: userDoc,
+        message: 'User updated successfully',
+      });
     });
   } catch (error) {
     console.error(error);
