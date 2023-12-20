@@ -44,20 +44,21 @@ const session = require("cookie-session"); // Simple cookie-based session middle
 
 const app = express();
 
-app.use(
-  cors({
-    // origin: "*",
-    // origin: 'http://localhost:3000',
-    origin: 'https://wolf.blutrain.net',
+// app.use(
+//   cors({
+//     // origin: "*",
+//     // origin: 'http://localhost:3000',
+//     origin: 'https://wolf.blutrain.net',
 
-    methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
+//     methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
 
-    credentials: true, //
-    allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true, //
+//     allowedHeaders: ['Content-Type', 'Authorization'],
 
-    //   Access-Control-Allow-Credentials is a header that, when set to true , tells browsers to expose the response to the frontend JavaScript code. The credentials consist of cookies, authorization headers, and TLS client certificates.
-  })
-);
+//     //   Access-Control-Allow-Credentials is a header that, when set to true , tells browsers to expose the response to the frontend JavaScript code. The credentials consist of cookies, authorization headers, and TLS client certificates.
+//   })
+// );
+app.use(cors())
 
 app.use(cookieParser());
 
@@ -107,7 +108,7 @@ app.use(
 //   res.header('Access-Control-Allow-Credentials', true);
 //   next();
 // });
-app.use('/uploads', cors(), express.static('uploads'));
+app.use('/uploads', express.static('uploads'));
 app.use(mongosanitize());
 
 app.use(xss());
