@@ -79,9 +79,8 @@ app.use(
   })
 );
 
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-}));
+// app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
