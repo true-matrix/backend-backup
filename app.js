@@ -59,7 +59,11 @@ const app = express();
 //   })
 // );
 app.use(cors())
-
+// Set the Cross-Origin-Resource-Policy header
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 app.use(cookieParser());
 
 // Setup express response and body parser configurations
