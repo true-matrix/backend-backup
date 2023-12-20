@@ -21,7 +21,7 @@ const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 // Please change appID to your appId, appid is a number
 // Example: 1234567890
 const appID = process.env.ZEGO_APP_ID; // type: number
-
+const apiUrl = 'https://backend-api-0pbl.onrender.com'
 // Please change serverSecret to your serverSecret, serverSecret is string
 // Example：'sdfsdfsd323sdfsdf'
 const serverSecret = process.env.ZEGO_SERVER_SECRET; // type: 32 byte length string
@@ -69,7 +69,7 @@ exports.getMe = catchAsync(async (req, res, next) => {
 // });
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'https://backend-api-0pbl.onrender.com/uploads');
+    cb(null, `${apiUrl}/uploads`);
   },
   // destination: './uploads',
   filename: (req, file, cb) => {
@@ -101,7 +101,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
       // If a file is uploaded, update the avatar property
       if (req.file) {
-        filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
+        filteredBody.avatar = `${apiUrl}/uploads/${req.file.filename}`;
         // filteredBody.avatar = fs.readFileSync(
         //   `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`
         // );
