@@ -112,7 +112,10 @@ app.use(
 //   res.header('Access-Control-Allow-Credentials', true);
 //   next();
 // });
-app.use('/uploads', express.static('uploads'));
+// Serve the static files in the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// app.use('/uploads', express.static('uploads'));
 app.use(mongosanitize());
 
 app.use(xss());
