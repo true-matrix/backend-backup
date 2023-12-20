@@ -5,6 +5,7 @@ const authController = require("../controllers/authController");
 const fileController = require("../controllers/fileController");
 const conversationController = require("../controllers/conversationController");
 const messageController = require("../controllers/messageController");
+const personalMessageController = require("../controllers/personalMessageController");
 // const imageController = require("../controllers/imageController");
 
 router.post(
@@ -42,7 +43,13 @@ router.get("/get-all-chats-users",authController.protect,  conversationControlle
 
 //Message
 router.post("/messages",authController.protect,  messageController.addMessage);
-router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
+// router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
+router.get("/allMessages",authController.protect,  messageController.getMessages);
+router.get("/getUsersByMessage",authController.protect,  userController.getAllChattingUsers);
+router.post("/resetUnreadMessage",authController.protect,  userController.resetUnreadMessagesCount);
+
+// router.post("/send-messages",authController.protect,  personalMessageController.sendMessage);
+// router.get("/get-messages/:conversationId",authController.protect,  personalMessageController.getMessages);
 
 
 

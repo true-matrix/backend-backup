@@ -36,6 +36,7 @@
     "nodemailer": "^6.9.7",
     "otp-generator": "^4.0.1",
     "socket.io": "^4.7.2",
+    "uuid": "^9.0.1",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
