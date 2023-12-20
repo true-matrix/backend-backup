@@ -98,7 +98,6 @@ app.use(
   })
 ); // Returns middleware that only parses urlencoded bodies
 
-// app.use('/uploads', express.static('uploads'))
 app.use('/uploads', express.static('uploads'), (req, res, next) => {
   // res.header('Access-Control-Allow-Origin', 'https://backend-api-0pbl.onrender.com'); // Specify your client's domain
   // res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
@@ -106,7 +105,7 @@ app.use('/uploads', express.static('uploads'), (req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, PATCH, POST, DELETE, PUT');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', true);
-  next();
+  // next();
 });
 app.use(mongosanitize());
 
