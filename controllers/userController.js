@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 const otpGenerator = require("otp-generator");
 const mailService = require("../services/mailer");
 const otp = require("../Templates/Mail/otp");
-
+const fs = require("fs")
 
 const AudioCall = require("../models/audioCall");
 const FriendRequest = require("../models/friendRequest");
@@ -101,7 +101,10 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
       // If a file is uploaded, update the avatar property
       if (req.file) {
-        filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
+        // filteredBody.avatar = `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`;
+        filteredBody.avatar = fs.readFileSync(
+          `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`
+        );
       }
 
       // Update the user document
