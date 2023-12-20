@@ -34,7 +34,7 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     
         const savedMessage = await existingConversation.save();
         // Emit a Socket.IO event after saving the message
-        req.io?.emit('newMessage', { message: savedMessage });
+        // req.io?.emit('newMessage', { message: savedMessage });
 
         res.status(200).json({
             status: 'success',

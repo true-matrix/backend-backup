@@ -603,7 +603,7 @@ exports.getAllChattingUsers = catchAsync(async (req, res, next) => {
     // Sort usersWithLastSentText based on lastSentTextTime in descending order
     usersWithLastSentText.sort((a, b) => new Date(b.lastSentTextTime) - new Date(a.lastSentTextTime));
 
-    console.log('chatting-users', usersWithLastSentText);
+    // console.log('chatting-users', usersWithLastSentText);
     res.status(200).json({
       status: 'success',
       data: usersWithLastSentText,

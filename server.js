@@ -19,7 +19,8 @@ const app = require("./app");
 const http = require("http");
 const server = http.createServer(app);
 
-const { Server } = require("socket.io"); // Add this
+// const { Server } = require("socket.io"); // Add this
+const socketIo = require('socket.io');
 const { promisify } = require("util");
 const User = require("./models/user");
 const FriendRequest = require("./models/friendRequest");
@@ -29,14 +30,25 @@ const VideoCall = require("./models/videoCall");
 
 // Add this
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
-const io = new Server(server, {
-  cors: {
-    // origin: "*",
-    // origin: "http://localhost:3000",
-    origin: 'https://wolf.blutrain.net',
-    methods: ["GET", "POST"],
-  },
-});
+// const io = new Server(server, {
+//   cors: {
+//     // origin: "*",
+//     origin: "http://localhost:3000",
+//     // origin: 'https://wolf.blutrain.net',
+//     methods: ["GET", "POST"],
+//   },
+// });
+const io = socketIo(server);
+
+const usp = io.of('/user-namespace');
+usp.on('connection', (socket)=>{
+  console.log('User Contd');
+  socket.on('disconnect', ()=>{
+    console.log('User Discontd');
+  })
+})
+
+
 const DB = process.env.DATABASE.replace(
   "<PASSWORD>",
   process.env.DATABASE_PASSWORD
