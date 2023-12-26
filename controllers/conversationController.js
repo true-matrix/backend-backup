@@ -102,30 +102,31 @@ exports.newConversation = catchAsync(async (req, res, next) => {
   }
 });
 
-
-
-
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
-  const authUserId = req.user._id;
-  const uId = req.params.userId
-  let senderId = "";
-  console.log('authUserId',authUserId);
-  console.log('uId',uId);
-  if(uId == authUserId){
-    senderId = authUserId;
-  }
-  console.log('senderId',senderId);
+  // const authUserId = req.user._id;
+  // const uId = req.params.userId
+  // let senderId = "";
+  // console.log('authUserId',authUserId);
+  // console.log('uId',uId);
+  // if(uId == authUserId){
+  //   senderId = authUserId;
+  // }
+  // console.log('senderId',senderId);
 
     try {
-        const conversation = await Conversation.find({
-           members : {$in: [senderId]} 
-        })
-      res.status(200).json({
-        status: 'success',
-        data: conversation,
-        message: 'Get conversation successfully',
-      })
+        const conversation = await Conversation.findOne({ _id: objectId(id) });
+
+        if (conversation) {
+          console.log('Found:', conversation);
+        } else {
+          console.log('No matching data found');
+        }
+      // res.status(200).json({
+      //   status: 'success',
+      //   data: conversation,
+      //   message: 'Get conversation successfully',
+      // })
     } catch (error) {
       console.error(error);
       res.status(500).json({
