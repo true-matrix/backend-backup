@@ -351,9 +351,10 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(userId, {
     otp_expiry_time: otp_expiry_time,
     otp_send_time: new Date(),
+    otp : new_otp.toString()
   });
 
-  user.otp = new_otp.toString();
+  // user.otp = new_otp.toString();
 
   await user.save({ new: true, validateModifiedOnly: true });
 
@@ -400,8 +401,8 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     });
   }
 
-  if (!(await user.correctOTP(otp, user.otp))) {
-  // if (otp !== user.otp) {
+  // if (!(await user.correctOTP(otp, user.otp))) {
+  if (otp !== user.otp) {
 
     res.status(400).json({
       status: "error",
