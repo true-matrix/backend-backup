@@ -1,6 +1,6 @@
 const express = require("express"); // web framework for Node.js.
 const morgan = require("morgan"); // HTTP request logger middleware for node.js
-
+const path = require('path');
 const routes = require("./routes/index");
 
 const rateLimit = require("express-rate-limit"); // Basic rate-limiting middleware for Express. Use to limit repeated requests to public APIs and/or endpoints such as password reset.
@@ -44,20 +44,21 @@ const session = require("cookie-session"); // Simple cookie-based session middle
 
 const app = express();
 
-app.use(
-  cors({
-    // origin: "*",
-    origin: 'http://localhost:3000',
-    // origin: 'https://wolf.blutrain.net',
+// app.use(
+//   cors({
+//     // origin: "*",
+//     // origin: 'http://localhost:3000',
+//     origin: 'https://wolf.blutrain.net',
 
-    methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
+//     methods: ["GET", "PATCH", "POST", "DELETE", "PUT"],
 
-    credentials: true, //
-    allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true, //
+//     allowedHeaders: ['Content-Type', 'Authorization'],
 
-    //   Access-Control-Allow-Credentials is a header that, when set to true , tells browsers to expose the response to the frontend JavaScript code. The credentials consist of cookies, authorization headers, and TLS client certificates.
-  })
-);
+//     //   Access-Control-Allow-Credentials is a header that, when set to true , tells browsers to expose the response to the frontend JavaScript code. The credentials consist of cookies, authorization headers, and TLS client certificates.
+//   })
+// );
+app.use(cors())
 
 app.use(cookieParser());
 
@@ -78,7 +79,18 @@ app.use(
   })
 );
 
-app.use(helmet());
+// app.use(helmet());
+// app.use(helmet({
+//   crossOriginEmbedderPolicy: false,
+// }));
+// app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // Other helmet configurations...
+  })
+);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
@@ -98,14 +110,19 @@ app.use(
   })
 ); // Returns middleware that only parses urlencoded bodies
 
-// app.use('/uploads', express.static('uploads'))
-app.use('/uploads', express.static('uploads'), (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://backend-api-0pbl.onrender.com'); // Specify your client's domain
-// res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE,PATCH');
-// // res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-// // res.setHeader('Access-Control-Allow-Credentials', 'true'); 
-  next();
-});
+// app.use('/uploads', express.static('uploads'), (req, res, next) => {
+//   // res.header('Access-Control-Allow-Origin', 'https://backend-api-0pbl.onrender.com'); // Specify your client's domain
+//   // res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+//   res.header('Access-Control-Allow-Origin', 'https://wolf.blutrain.net');
+//   res.header('Access-Control-Allow-Methods', 'GET, PATCH, POST, DELETE, PUT');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//   res.header('Access-Control-Allow-Credentials', true);
+//   next();
+// });
+// Serve the static files in the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// app.use('/uploads', express.static('uploads'));
 app.use(mongosanitize());
 
 app.use(xss());

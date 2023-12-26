@@ -5,6 +5,7 @@ const authController = require("../controllers/authController");
 const fileController = require("../controllers/fileController");
 const conversationController = require("../controllers/conversationController");
 const messageController = require("../controllers/messageController");
+const personalMessageController = require("../controllers/personalMessageController");
 // const imageController = require("../controllers/imageController");
 
 router.post(
@@ -37,10 +38,18 @@ router.post("/updateuser/:userId",authController.protect,  userController.update
 //Conversation
 router.post("/conversations",authController.protect,  conversationController.newConversation);
 router.get("/conversations/:userId",authController.protect,  conversationController.getConversation);
+router.get("/get-all-conversations",authController.protect,  conversationController.getAllConversations);
+router.get("/get-all-chats-users",authController.protect,  conversationController.getAllChatsUsers);
 
 //Message
 router.post("/messages",authController.protect,  messageController.addMessage);
-router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
+// router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
+router.get("/allMessages",authController.protect,  messageController.getMessages);
+router.get("/getUsersByMessage",authController.protect,  userController.getAllChattingUsers);
+router.post("/resetUnreadMessage",authController.protect,  userController.resetUnreadMessagesCount);
+
+// router.post("/send-messages",authController.protect,  personalMessageController.sendMessage);
+// router.get("/get-messages/:conversationId",authController.protect,  personalMessageController.getMessages);
 
 
 

@@ -351,9 +351,10 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(userId, {
     otp_expiry_time: otp_expiry_time,
     otp_send_time: new Date(),
+    otp : new_otp.toString()
   });
 
-  user.otp = new_otp.toString();
+  // user.otp = new_otp.toString();
 
   await user.save({ new: true, validateModifiedOnly: true });
 
@@ -400,8 +401,8 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     });
   }
 
-  if (!(await user.correctOTP(otp, user.otp))) {
-  // if (otp !== user.otp) {
+  // if (!(await user.correctOTP(otp, user.otp))) {
+  if (otp !== user.otp) {
 
     res.status(400).json({
       status: "error",
@@ -496,7 +497,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // 2) Verification of token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  console.log(decoded);
+  // console.log("decoded",decoded);
 
   // 3) Check if user still exists
 
@@ -534,8 +535,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) Send it to user's email
   try {
-    const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
-    // const resetURL = `https://wolf.blutrain.net/auth/new-password?token=${resetToken}`;
+    // const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
+    const resetURL = `https://wolf.blutrain.net/auth/new-password?token=${resetToken}`;
     // TODO => Send Email with this Reset URL to user's email address
 
     console.log(resetURL);
