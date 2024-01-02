@@ -105,9 +105,6 @@ exports.newConversation = catchAsync(async (req, res, next) => {
   }
 });
 
-
-
-
 // Get Conversation of a user
 exports.getConversation = catchAsync(async (req, res, next) => {
   let token;
