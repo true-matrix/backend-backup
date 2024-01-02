@@ -20,7 +20,6 @@ const http = require("http");
 const server = http.createServer(app);
 
 // const { Server } = require("socket.io"); // Add this
-const socketIo = require('socket.io');
 const { promisify } = require("util");
 const User = require("./models/user");
 const FriendRequest = require("./models/friendRequest");
@@ -38,15 +37,15 @@ const VideoCall = require("./models/videoCall");
 //     methods: ["GET", "POST"],
 //   },
 // });
-const io = socketIo(server);
+// const io = socketIo(server);
 
-const usp = io.of('/user-namespace');
-usp.on('connection', (socket)=>{
-  console.log('User Contd');
-  socket.on('disconnect', ()=>{
-    console.log('User Discontd');
-  })
-})
+// const usp = io.of('/user-namespace');
+// usp.on('connection', (socket)=>{
+//   console.log('User Contd');
+//   socket.on('disconnect', ()=>{
+//     console.log('User Discontd');
+//   })
+// })
 
 
 const DB = process.env.DATABASE.replace(
