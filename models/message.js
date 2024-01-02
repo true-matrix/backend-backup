@@ -7,6 +7,12 @@ const messageSchema = new mongoose.Schema({
     receiver: { type: mongoose.Schema.Types.ObjectId,
       ref: 'User',},
     text: {type: String},
+    images: [
+      {
+        path: String,
+        filename: String,
+      },
+    ],
     seen: {type: Boolean, default: false },
     received: {type: Boolean, default: false },
   },

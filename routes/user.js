@@ -8,6 +8,36 @@ const messageController = require("../controllers/messageController");
 const personalMessageController = require("../controllers/personalMessageController");
 // const imageController = require("../controllers/imageController");
 
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './uploads'); // Set your upload directory
+  },
+  filename: (req, file, cb) => {
+    console.log('filee',file)
+    console.log('reqq',req)
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+// const uploadFilesMiddleware = upload.array('files');
+const uploadFilesMiddleware = (req, res, next) => {
+  console.log('uploadFilesMiddleware executed',req);
+  upload.array('files')(req, res, (err) => {
+    if (err) {
+      console.error('Error uploading files:', err);
+      return res.status(400).json({
+        status: 'error',
+        message: 'Files upload error',
+        error: err.message,
+      });
+    }
+    next();
+  });
+};
+
 router.post(
   "/generate-zego-token",
   authController.protect,
@@ -42,7 +72,7 @@ router.get("/get-all-conversations",authController.protect,  conversationControl
 router.get("/get-all-chats-users",authController.protect,  conversationController.getAllChatsUsers);
 
 //Message
-router.post("/messages",authController.protect,  messageController.addMessage);
+router.post("/messages",authController.protect, uploadFilesMiddleware, messageController.addMessage);
 // router.get("/messages/:conversationId",authController.protect,  messageController.getMessages);
 router.get("/allMessages",authController.protect,  messageController.getMessages);
 router.get("/getUsersByMessage",authController.protect,  userController.getAllChattingUsers);
