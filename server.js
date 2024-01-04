@@ -16,8 +16,18 @@ process.on("uncaughtException", (err) => {
 
 const app = require("./app");
 
-const http = require("http");
-const server = http.createServer(app);
+const https = require("https");
+
+const fs = require("fs");
+
+
+const options = {
+  key: fs.readFileSync('certificates/key.pem'),
+  cert: fs.readFileSync('certificates/cert.pem'),
+};
+
+
+const server = https.createServer(options, app);
 
 // const { Server } = require("socket.io"); // Add this
 const socketIo = require('socket.io');

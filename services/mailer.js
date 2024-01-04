@@ -4,7 +4,7 @@ const elasticemail = require('elasticemail');
 const nodemailer = require('nodemailer');
 
 
-sgMail.setApiKey(process.env.SG_KEY);
+//sgMail.setApiKey(process.env.SG_KEY);
 
 // const sendSGMail = async ({
 //   to,
