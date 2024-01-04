@@ -4,7 +4,7 @@ const elasticemail = require('elasticemail');
 const nodemailer = require('nodemailer');
 
 
-//sgMail.setApiKey(process.env.SG_KEY);
+// sgMail.setApiKey(process.env.SG_KEY);
 
 // const sendSGMail = async ({
 //   to,
@@ -40,8 +40,10 @@ var client = elasticemail.createClient({
 const transporter = nodemailer.createTransport({
   service: 'gmail', // Use the email service provider (e.g., 'gmail' for Gmail)
   auth: {
-    user: 'rajesh.truematrix@gmail.com', // Your email address
-    pass: 'ssdr txqp zclh deqx' // Your email password or application-specific password
+    // user: 'rajesh.truematrix@gmail.com', // Your email address
+    user: 'packwolf2024@gmail.com', // Your email address
+    // pass: 'ssdr txqp zclh deqx' // Your email password or application-specific password
+    pass: 'gbjk zfzj gonj ibtw' // Your email password or application-specific password
   }
 });
  
@@ -55,7 +57,8 @@ const sendSGMail = async ({
 }) => {
   try {
     const mailOptions = {
-      from: 'rajesh.truematrix@gmail.com', // Sender address
+      // from: 'rajesh.truematrix@gmail.com', // Sender address
+      from: '"True Chat" <info@truematrix.ai>', // Sender address
       to: to, // Recipient address
       subject: subject, // Subject line
       html: html // Plain text body

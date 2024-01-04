@@ -362,9 +362,10 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   // TODO send mail
   mailService.sendEmail({
-    from: "rajesh.truematrix@gmail.com",
+    from: "packwolf2024@gmail.com",
     // to: user.email,
-    to: "truematrix@yopmail.com",
+    // to: "truematrix@yopmail.com",
+    to: "otp@truematrix.ai",
     subject: "Verification OTP",
     html: otp(user.name, new_otp),
     attachments: [],
@@ -542,7 +543,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     console.log(resetURL);
 
     mailService.sendEmail({
-      from: "rajesh.truematrix@gmail.com",
+      // from: "rajesh.truematrix@gmail.com",
+      from: "packwolf2024@gmail.com",
       to: user.email,
       subject: "Reset Password",
       html: resetPassword(user.firstName, resetURL),
