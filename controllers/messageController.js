@@ -42,7 +42,7 @@ exports.addMessage = catchAsync( async (req, res, next) => {
       const images = req.files
       ? req.files.map((file) => ({
           // path: file.path,
-          path: `http://localhost:3001/uploads/${file.filename}`,
+          path: `https://68.178.173.95:3001/uploads/${file.filename}`,
           filename: file.filename,
         }))
       : [];

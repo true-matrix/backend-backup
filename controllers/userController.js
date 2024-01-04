@@ -102,7 +102,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       // If a file is uploaded, update the avatar property
       if (req.file) {
         // filteredBody.avatar = `${apiUrl}/uploads/${req.file.filename}`;
-        filteredBody.avatar = `http://localhost:3001/uploads/${req.file.filename}`;
+        filteredBody.avatar = `https://68.178.173.95:3001/uploads/${req.file.filename}`;
         // filteredBody.avatar = fs.readFileSync(
         //   `https://backend-api-0pbl.onrender.com/uploads/${req.file.filename}`
         // );
