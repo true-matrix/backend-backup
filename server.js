@@ -16,7 +16,8 @@ process.on("uncaughtException", (err) => {
 
 const app = require("./app");
 
-const https = require("https");
+// const https = require("https");
+const http = require("http");
 
 const fs = require("fs");
 
@@ -27,7 +28,7 @@ const options = {
 };
 
 
-const server = https.createServer(options, app);
+const server = http.createServer(app);
 
 // const { Server } = require("socket.io"); // Add this
 const { promisify } = require("util");
@@ -79,6 +80,47 @@ const port = process.env.PORT || 8080;
 server.listen(port,'0.0.0.0', () => {
   console.log(`App running on port ${port} ...`);
 });
+
+//Start Socket
+const io = require('socket.io')(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:3000",
+  }
+})
+
+
+io.on("connection", (socket)=> {
+  console.log("Connected to Socket.io");
+  
+  socket.on("setup", (userData) => {
+    socket.join(userData);
+    console.log("userData",userData);
+    socket.emit("connected")
+  })
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log("User Joined Room: " + room);
+  })
+
+  socket.on("new message", (newMessageReceived)=>{
+    let chat = newMessageReceived.text;
+    // console.log('newMessageReceived=>',newMessageReceived);
+    // if(newMessageReceived.text.length > 0 || newMessageReceived.images.length > 0){
+    socket.in(newMessageReceived.receiver._id).emit("message received", newMessageReceived)
+    // }
+
+    // if(!chat.users) return console.log("chat.users not defined");
+
+    // chat.users.forEach((user) => {
+    //   if( user._id == newMessageReceived.sender._id) return;
+
+    //   socket.in(user._id).emit("message received", newMessageReceived)
+    // })
+  })
+
+})
 
 // io.on("connection", async (socket) => {
 //   const user_id = socket.handshake.query["user_id"];
