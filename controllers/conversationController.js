@@ -195,7 +195,7 @@ exports.getAllChatsUsers = catchAsync(async (req, res, next) => {
       const userId = user.userId;
   
       // Call the getAllConversations API to get conversations
-      const conversationsResponse = await axios.get('https://backend-api-0pbl.onrender.com/user/get-all-conversations', {
+      const conversationsResponse = await axios.get('https://68.178.173.95:3001/user/get-all-conversations', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

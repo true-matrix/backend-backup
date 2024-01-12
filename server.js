@@ -7,6 +7,7 @@ dotenv.config({ path: "./config.env" });
 // import jwt from "jsonwebtoken";
 // import dotenv from "dotenv";
 // dotenv.config({ path: "./config.env" });
+const { attachIoToRequest } = require('./socketManager');
 
 process.on("uncaughtException", (err) => {
   console.log(err);
@@ -83,32 +84,78 @@ server.listen(port,'0.0.0.0', () => {
 
 //Start Socket
 const io = require('socket.io')(server, {
-  pingTimeout: 60000,
+  maxHttpBufferSize: 1e8, // Example buffer size configuration
+  // transports: ['websocket'],
+  allowUpgrades: false,
+  perMessageDeflate: false,
+  httpCompression: false,
+  maxHttpBufferSize: 1e8,
   cors: {
     origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
   }
 })
 
 
-io.on("connection", (socket)=> {
+io.on("connection",async (socket)=> {
   console.log("Connected to Socket.io");
-  
-  socket.on("setup", (userData) => {
-    socket.join(userData);
-    console.log("userData",userData);
+
+  // let userId = socket.handshake.auth.userId
+  // const objectId =new mongoose.Types.ObjectId(userId);
+  // const status =await User.findById(objectId, { _id: 0, verified: 1 });
+  // console.log('status',status?.verified);
+
+  // // Send the current verification status to the client when they connect
+  // socket.emit('verificationStatus', status?.verified);
+
+  socket.on("setup",async (userId) => {
+    socket.join(userId);
+    // console.log("socket.id=>",socket.id);
+    // console.log("userId.id=>",userId);
+    const objectId =new mongoose.Types.ObjectId(userId);
+    await User.findByIdAndUpdate({_id: objectId}, {$set:{verified: true}})
+    const status =await User.findById(objectId, { _id: 0, verified: 1 });
+    socket.emit('verificationStatus', status?.verified);
+
+    // console.log("userId",userId);
     socket.emit("connected")
   })
 
-  socket.on("join chat", (room) => {
-    socket.join(room);
-    console.log("User Joined Room: " + room);
-  })
 
-  socket.on("new message", (newMessageReceived)=>{
-    let chat = newMessageReceived.text;
-    // console.log('newMessageReceived=>',newMessageReceived);
+
+  // socket.on("join chat", (room) => {
+  //   socket.join(room);
+  //   console.log("User Joined Room: " + room);
+  // })
+  const createRoomId = (userId1, userId2) => {
+    const sortedUserIds = [userId1, userId2].sort();
+    return sortedUserIds.join('-');
+  };
+    // Handle the "join chat" event
+    socket.on('join chat', ({ senderId, receiverId }) => {
+      // const room = `${senderId}-${receiverId}`;
+      const room = createRoomId(senderId, receiverId);
+  
+      // Join the chat room
+      socket.join(room);
+  
+      // console.log(`User ${socket.id} joined chat room: ${room}`);
+    });
+
+    socket.on("leave chat", async ({ senderId, receiverId }) => {
+      const room = createRoomId(senderId, receiverId);
+      socket.leave(room);
+  
+      // console.log(`User ${socket.id} left chat room: ${room}`);
+    });
+
+  socket.on("new message", (formData)=>{
+    // let chat = newMessageReceived.text;
+    console.log('new message',formData);
+    // console.log('newMessageReceived1',newMessageReceived?.receiver);
     // if(newMessageReceived.text.length > 0 || newMessageReceived.images.length > 0){
-    socket.in(newMessageReceived.receiver._id).emit("message received", newMessageReceived)
+    const room = createRoomId(formData?.sender?._id, formData?.receiver?._id);
+    socket.to(room).emit("message received", formData)
     // }
 
     // if(!chat.users) return console.log("chat.users not defined");
@@ -118,6 +165,17 @@ io.on("connection", (socket)=> {
 
     //   socket.in(user._id).emit("message received", newMessageReceived)
     // })
+  })
+
+
+  //Disconnect
+  socket.on("disconnect",async()=>{
+    let userId = socket.handshake.auth.userId
+    const objectId =new mongoose.Types.ObjectId(userId);
+    await User.findByIdAndUpdate({_id: objectId}, {$set:{verified: false}})
+    let status =await User.findById(objectId, { _id: 0, verified: 1 });
+    socket.emit('verificationStatus', status?.verified);
+
   })
 
 })

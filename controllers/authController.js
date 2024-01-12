@@ -416,6 +416,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   // OTP is correct
 
   user.verified = true;
+  user.islogin = true;
   user.otp = undefined;
   await user.save({ new: true, validateModifiedOnly: true });
 
@@ -456,7 +457,7 @@ exports.logout = catchAsync(async (req, res, next) => {
     // Update the 'verified' field to false in MongoDB
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $set: { verified: false } },
+      { $set: { verified: false, islogin : false } },
       { new: true } // Return the updated document
     );
 
