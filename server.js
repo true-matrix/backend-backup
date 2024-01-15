@@ -98,6 +98,20 @@ const io = require('socket.io')(server, {
   }
 })
 
+let users = [];
+const addUser = (userId, socketId) => {
+  console.log("userData",userId," socketId",socketId);
+  
+  !users.some(user => user?.userId == userId ) && users.push({ userId, socketId })
+  // users = [...users, { userId, socketId }];
+  console.log('users=>',users);
+}
+const removeUser = (socketId) => {
+  users = users.filter(user => user.socketId !== socketId);
+}
+const getUser = (userId) => {
+  return users.find(user => user?.userId == userId )
+}
 
 io.on("connection",async (socket)=> {
   console.log("Connected to Socket.io");
@@ -111,9 +125,11 @@ io.on("connection",async (socket)=> {
   // socket.emit('verificationStatus', status?.verified);
 
   socket.on("setup",async (userId) => {
+    if(userId != null){
     socket.join(userId);
-    // console.log("socket.id=>",socket.id);
-    // console.log("userId.id=>",userId);
+    console.log("socket.id=>",socket.id);
+    console.log("userId.id=>",userId);
+    addUser(userId,socket.id)
     const objectId =new mongoose.Types.ObjectId(userId);
     await User.findByIdAndUpdate({_id: objectId}, {$set:{verified: true}})
     const status =await User.findById(objectId, { _id: 0, verified: 1 });
@@ -121,6 +137,8 @@ io.on("connection",async (socket)=> {
 
     // console.log("userId",userId);
     socket.emit("connected")
+    io.emit('getUsers',users)
+  }
   })
 
 
@@ -152,21 +170,11 @@ io.on("connection",async (socket)=> {
     });
 
   socket.on("new message", (formData)=>{
-    // let chat = newMessageReceived.text;
     console.log('new message',formData);
-    // console.log('newMessageReceived1',newMessageReceived?.receiver);
-    // if(newMessageReceived.text.length > 0 || newMessageReceived.images.length > 0){
-    const room = createRoomId(formData?.sender?._id, formData?.receiver?._id);
-    socket.to(room).emit("message received", formData)
-    // }
-
-    // if(!chat.users) return console.log("chat.users not defined");
-
-    // chat.users.forEach((user) => {
-    //   if( user._id == newMessageReceived.sender._id) return;
-
-    //   socket.in(user._id).emit("message received", newMessageReceived)
-    // })
+    const user = getUser(formData?.receiver?._id)
+    // const room = createRoomId(formData?.sender?._id, formData?.receiver?._id);
+    socket.to(user?.socketId).emit("message received", formData)
+    // socket.to(room).emit("message received", formData)
   })
 
 
@@ -175,9 +183,10 @@ io.on("connection",async (socket)=> {
     let userId = socket.handshake.auth.userId
     const objectId =new mongoose.Types.ObjectId(userId);
     await User.findByIdAndUpdate({_id: objectId}, {$set:{verified: false}})
+    removeUser(socket.id);
     let status =await User.findById(objectId, { _id: 0, verified: 1 });
     socket.emit('verificationStatus', status?.verified);
-
+    io.emit('getUsers', users);
   })
 
 })
