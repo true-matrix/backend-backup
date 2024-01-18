@@ -35,6 +35,7 @@ const server = https.createServer(options, app);
 // const { Server } = require("socket.io"); // Add this
 const { promisify } = require("util");
 const User = require("./models/user");
+const Message = require("./models/message");
 const FriendRequest = require("./models/friendRequest");
 const OneToOneMessage = require("./models/OneToOneMessage");
 const AudioCall = require("./models/audioCall");
@@ -174,8 +175,30 @@ io.on("connection",async (socket)=> {
     const user = getUser(formData?.receiver?._id)
     // const room = createRoomId(formData?.sender?._id, formData?.receiver?._id);
     socket.to(user?.socketId).emit("message received", formData)
-    // socket.to(room).emit("message received", formData)
+    socket.to(user?.socketId).emit("getNotification",{
+      senderId : formData?.sender?._id,
+      isRead: false,
+      date: new Date()
+      })
   })
+
+  // // Handle event when a user reads a message
+  // socket.on('messageRead', async (data) => {
+  //   // Assuming data includes the sender and receiver user IDs
+  //   const { senderUserId, receiverUserId } = data;
+
+  //   // Update the unread message count to 0 in your database
+  //   // You may use your database model to update the unreadMessagesCounts
+
+  //   // Example using Mongoose:
+  //   await Message.updateMany(
+  //     { sender: senderUserId, receiver: receiverUserId, seen: false },
+  //     { $set: { seen: true } }
+  //   );
+
+  //   // Emit an event to update the unread message count on the client side
+  //   io.emit('updateUnreadCount', { userId: senderUserId, unreadCount: 0 });
+  // });
 
 
   //Disconnect
