@@ -629,9 +629,9 @@ exports.resetUnreadMessagesCount = catchAsync(async (req, res, next) => {
       { sender: friendId, receiver: userId, seen: false },
       { $set: { seen: true } }
     );
-
+    const objectId = new ObjectId(userId);
     await User.findOneAndUpdate(
-      { _id: userId },
+      { _id: objectId },
       { $set: { unreadMessagesCount: 0 } }
     );
 
