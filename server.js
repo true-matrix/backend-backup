@@ -17,8 +17,8 @@ process.on("uncaughtException", (err) => {
 
 const app = require("./app");
 
-const https = require("https");
-// const http = require("http");
+// const https = require("https");
+const http = require("http");
 
 const fs = require("fs");
 
@@ -29,8 +29,8 @@ const options = {
 };
 
 
-// const server = http.createServer(app);
-const server = https.createServer(options, app);
+const server = http.createServer(app);
+// const server = https.createServer(options, app);
 
 // const { Server } = require("socket.io"); // Add this
 const { promisify } = require("util");
@@ -93,8 +93,8 @@ const io = require('socket.io')(server, {
   httpCompression: false,
   maxHttpBufferSize: 1e8,
   cors: {
-    // origin: "http://localhost:3000",
-    origin: "https://wolf.blutrain.net",
+    origin: "http://localhost:3000",
+    // origin: "https://wolf.blutrain.net",
     methods: ["GET", "POST"]
   }
 })
