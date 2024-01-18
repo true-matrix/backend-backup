@@ -630,6 +630,11 @@ exports.resetUnreadMessagesCount = catchAsync(async (req, res, next) => {
       { $set: { seen: true } }
     );
 
+    await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { unreadMessagesCount: 0 } }
+    );
+
     // Respond with success
     res.status(200).json({ status: 'success', message: 'Unread count reset successfully' });
   } catch (error) {

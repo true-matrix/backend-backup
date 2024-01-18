@@ -268,6 +268,33 @@ exports.addUser = catchAsync(async (req, res, next) => {
     }
 });
 
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.id; // Assuming you pass the user ID in the request parameters
+
+    // Check if the user with the given ID exists
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Use deleteOne to delete the user
+    await User.deleteOne({ _id: userId });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   // const filteredBody = filterObj(
