@@ -240,6 +240,7 @@ exports.addUser = catchAsync(async (req, res, next) => {
     "email",
     "password",
     "phone",
+    "userRole",
     "gender"
   );
 

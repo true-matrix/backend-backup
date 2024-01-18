@@ -704,6 +704,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
       'name',
       'email',
       'phone',
+      'userRole',
       'gender'
     );
 
