@@ -15,6 +15,10 @@ const messageSchema = new mongoose.Schema({
     ],
     seen: {type: Boolean, default: false },
     received: {type: Boolean, default: false },
+    deleted: {
+      type: Boolean,
+      default: false
+    },
   },
   {
     timestamps:true
