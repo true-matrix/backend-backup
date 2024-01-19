@@ -20,13 +20,13 @@ const app = require("./app");
 // const https = require("https");
 const http = require("http");
 
-const fs = require("fs");
+// const fs = require("fs");
 
 
-const options = {
-  key: fs.readFileSync('certificates/key.pem'),
-  cert: fs.readFileSync('certificates/cert.pem'),
-};
+// const options = {
+//   key: fs.readFileSync('certificates/key.pem'),
+//   cert: fs.readFileSync('certificates/cert.pem'),
+// };
 
 
 const server = http.createServer(app);
@@ -93,8 +93,9 @@ const io = require('socket.io')(server, {
   httpCompression: false,
   maxHttpBufferSize: 1e8,
   cors: {
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
     // origin: "https://wolf.blutrain.net",
+    origin: "http://wolfpackmessenger.com",
     methods: ["GET", "POST"]
   }
 })
