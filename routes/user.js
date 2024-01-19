@@ -77,6 +77,7 @@ router.post("/messages",authController.protect, uploadFilesMiddleware, messageCo
 router.get("/allMessages",authController.protect,  messageController.getMessages);
 router.get("/getUsersByMessage",authController.protect,  userController.getAllChattingUsers);
 router.post("/resetUnreadMessage",authController.protect,  userController.resetUnreadMessagesCount);
+router.delete("/:messageId",authController.protect,  messageController.deleteMessage);
 
 // router.post("/send-messages",authController.protect,  personalMessageController.sendMessage);
 // router.get("/get-messages/:conversationId",authController.protect,  personalMessageController.getMessages);

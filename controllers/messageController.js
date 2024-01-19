@@ -118,6 +118,38 @@ exports.addMessage = catchAsync( async (req, res, next) => {
   }
 });
 
+//Delete Message
+exports.deleteMessage =catchAsync(async (req, res) => {
+  const { messageId } = req.params;
+
+  try {
+    // Check if the message with the provided ID exists
+    const existingMessage = await Message.findById(messageId);
+    if (!existingMessage) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Message not found',
+      });
+    }
+
+    existingMessage.text = 'This message deleted';
+    // Perform the deletion by setting the 'deleted' field to true
+    existingMessage.deleted = true;
+    await existingMessage.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Message deleted successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+});
+
 
 // Add Message
 // exports.addMessage = catchAsync(async (req, res, next) => {

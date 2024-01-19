@@ -183,6 +183,30 @@ io.on("connection",async (socket)=> {
       })
   })
 
+  socket.on('deleteMessage', async (messageId) => {
+    try {
+      // Perform the deletion logic here...
+      const existingMessage = await Message.findById(messageId);
+
+      if (!existingMessage) {
+        // If the message doesn't exist, notify the client
+        return io.to(socket.id).emit('messageDeleteError', 'Message not found');
+      }
+
+      // Perform the deletion by setting the 'deleted' field to true
+      existingMessage.deleted = true;
+      await existingMessage.save();
+
+      // Notify all connected clients about the deleted message
+      io.emit('messageDeleted', messageId);
+    } catch (error) {
+      console.error(error);
+
+      // If there's an error during deletion, notify the client
+      io.to(socket.id).emit('messageDeleteError', 'Internal server error');
+    }
+  });
+
   // // Handle event when a user reads a message
   // socket.on('messageRead', async (data) => {
   //   // Assuming data includes the sender and receiver user IDs
