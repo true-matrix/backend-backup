@@ -77,7 +77,7 @@ exports.fileUpload = upload.single('profilePicture'), catchAsync(async (req, res
     await newFile.save();
 
     res.status(200).json({
-      image_url: `https://68.178.173.95:3001/uploads/${req.file.filename}`,
+      image_url: `http://68.178.173.95:3001/uploads/${req.file.filename}`,
       status: 'success',
       message: 'File uploaded successfully',
     });
