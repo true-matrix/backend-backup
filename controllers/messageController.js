@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const Message = require("../models/message");
-const GroupMessage = require("../models/GroupMessage");
+const Group = require("../models/Group");
+const GroupMessage = require("../models/GroupMessage")
 const User = require("../models/user");
 const catchAsync = require("../utils/catchAsync");
 const filterObj = require("../utils/filterObj");
@@ -176,7 +177,7 @@ exports.createGroup =catchAsync(async (req, res) => {
     }
 
     // // Create a new group chat
-    // const newGroupChat = new GroupMessage({
+    // const newGroupChat = new Group({
     //   groupname,
     //   description,
     //   admin: adminUser._id,
@@ -184,7 +185,7 @@ exports.createGroup =catchAsync(async (req, res) => {
     // });
 
      // Create a new group chat
-     const newGroupChat = new GroupMessage({
+     const newGroupChat = new Group({
       groupname,
       description,
       admin: adminUser.toObject(), // Use toObject() to convert to a plain JavaScript object
@@ -211,13 +212,13 @@ exports.createGroup =catchAsync(async (req, res) => {
 exports.getAllGroups =catchAsync(async (req, res) => {
   try{
     // Find all groups where the user is either the admin or a member
-    // const groups = await GroupMessage.find({
+    // const groups = await Group.find({
     //   $or: [
     //     { admin: req.user._id },
     //     { members: req.user._id },
     //   ],
     // });
-    const groups = await GroupMessage.find({
+    const groups = await Group.find({
       $or: [
         { admin: req.user._id },
         { members: req.user._id },
@@ -252,14 +253,14 @@ exports.deleteGroup =catchAsync(async (req, res) => {
   }
 
   // Find the group and check if the logged-in user is the admin
-  const group = await GroupMessage.findOne({ _id: groupId, admin: req.user._id });
+  const group = await Group.findOne({ _id: groupId, admin: req.user._id });
 
   if (!group) {
     return res.status(404).json({ error: 'Group not found or you do not have permission to delete it' });
   }
 
   // Delete the group
-  await GroupMessage.findByIdAndDelete(groupId);
+  await Group.findByIdAndDelete(groupId);
 
   res.status(200).json({
     status: 'success',
@@ -277,7 +278,7 @@ exports.getGroupById =catchAsync(async (req, res) => {
   }
 
   // Find the group by ID
-  const group = await GroupMessage.findOne({ _id: groupId })
+  const group = await Group.findOne({ _id: groupId })
     .populate('admin')  // Populate the 'admin' field
     .populate('members'); // Populate the 'members' field
 
@@ -292,6 +293,67 @@ exports.getGroupById =catchAsync(async (req, res) => {
   });
 });
 
+//Send Message in a group
+exports.sendGroupMessage = catchAsync( async (req, res, next) => {
+  try {
+    // Map uploaded files to the required format
+    const images = req.files
+      ? req.files.map((file) => ({
+          path: `http://68.178.173.95:3001/uploads/${file.filename}`,
+          filename: file.filename,
+        }))
+      : [];
+
+    // Filter the body properties
+    const filteredBody = filterObj(req.body, 'group', 'sender', 'message');
+
+    // Create a new GroupMessage instance
+    const newMessage = new GroupMessage({
+      ...filteredBody,
+      images: images,
+    });
+
+    // Save the new message to the database
+    const savedMessage = await newMessage.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: savedMessage,
+      message: 'Message added successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+
+});
+
+//Get all messages in a group by group id
+exports.getGroupMessages = catchAsync( async (req, res, next) => {
+  try {
+    const groupId = req.params.groupId;
+
+    // Find all messages for the specified group
+    const groupMessages = await GroupMessage.find({ group: groupId })
+      .populate('sender', 'name avatar seen received userRole') // Populate the 'sender' field with name, avatar, and status from the 'User' model
+      .exec();
+
+    res.status(200).json({
+      status: 'success',
+      data: groupMessages,
+      message: 'Retrieved group messages successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+});
 
 
 

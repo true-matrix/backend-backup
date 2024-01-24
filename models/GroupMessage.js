@@ -1,17 +1,20 @@
 const mongoose = require("mongoose");
 
-// Define Group schema
+// Define Group Message schema
 const groupMessageSchema = new mongoose.Schema({
-    groupname: {type: String},
-    description: {type: String},
-    admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    // admin: { type: Object, ref: 'User' },
-    // members: [{ type: Object, ref: 'User' }],
-  },
-  {
-    timestamps:true
-  });
-  
-  const GroupMessage =new mongoose.model('GroupMessage', groupMessageSchema);
-  module.exports = GroupMessage;
+    group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    message: { type: String, required: true },
+    images: [
+      {
+        path: String,
+        filename: String,
+      },
+    ],
+    },
+    {
+      timestamps:true
+    });
+
+const GroupMessage = mongoose.model('GroupMessage', groupMessageSchema);
+module.exports = GroupMessage;

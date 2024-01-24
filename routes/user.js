@@ -84,6 +84,10 @@ router.post("/group/createNewGroup",authController.protect, messageController.cr
 router.get("/group/allGroups",authController.protect, messageController.getAllGroups) //Get all groups for the logged-in user
 router.delete("/group/:groupId",authController.protect,  messageController.deleteGroup);
 router.get("/group/:groupId",authController.protect,  messageController.getGroupById);
+router.post("/group/sendmessage",authController.protect, uploadFilesMiddleware, messageController.sendGroupMessage);
+router.get("/group/:groupId/messages",authController.protect,  messageController.getGroupMessages);
+
+
 
 
 // router.post("/send-messages",authController.protect,  personalMessageController.sendMessage);
