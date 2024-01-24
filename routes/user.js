@@ -79,6 +79,13 @@ router.get("/getUsersByMessage",authController.protect,  userController.getAllCh
 router.post("/resetUnreadMessage",authController.protect,  userController.resetUnreadMessagesCount);
 router.delete("/:messageId",authController.protect,  messageController.deleteMessage);
 
+//Group Message
+router.post("/group/createNewGroup",authController.protect, messageController.createGroup);
+router.get("/group/allGroups",authController.protect, messageController.getAllGroups) //Get all groups for the logged-in user
+router.delete("/group/:groupId",authController.protect,  messageController.deleteGroup);
+router.get("/group/:groupId",authController.protect,  messageController.getGroupById);
+
+
 // router.post("/send-messages",authController.protect,  personalMessageController.sendMessage);
 // router.get("/get-messages/:conversationId",authController.protect,  personalMessageController.getMessages);
 
