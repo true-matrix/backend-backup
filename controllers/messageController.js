@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const Message = require("../models/message");
+const GroupMessage = require("../models/GroupMessage");
+const User = require("../models/user");
 const catchAsync = require("../utils/catchAsync");
 const filterObj = require("../utils/filterObj");
 const multer = require('multer');
@@ -149,6 +152,149 @@ exports.deleteMessage =catchAsync(async (req, res) => {
     });
   }
 });
+
+/***************Group Message***************/
+//Create a new group
+exports.createGroup =catchAsync(async (req, res) => {
+  try{
+    const { groupname, description, admin, members } = req.body;
+
+    // Validate input
+    if (!groupname || !admin || !members || !Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    // Check if the admin and members exist in the User collection
+    const [adminUser, ...memberUsers] = await Promise.all([
+      User.findById(admin),
+      ...members.map(memberId => User.findById(memberId)),
+    ]);
+
+    // Validate if all users exist
+    if (!adminUser || memberUsers.some(user => !user)) {
+      return res.status(400).json({ error: 'Invalid user ID(s)' });
+    }
+
+    // // Create a new group chat
+    // const newGroupChat = new GroupMessage({
+    //   groupname,
+    //   description,
+    //   admin: adminUser._id,
+    //   members: memberUsers.map(user => user._id),
+    // });
+
+     // Create a new group chat
+     const newGroupChat = new GroupMessage({
+      groupname,
+      description,
+      admin: adminUser.toObject(), // Use toObject() to convert to a plain JavaScript object
+      members: memberUsers.map(user => user.toObject()), // Use toObject() for each member
+  });
+
+    // Save the group chat to the database
+    await newGroupChat.save();
+    res.status(200).json({
+      status: 'success',
+      data: newGroupChat ,
+      message: 'New group created successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+});
+
+//Get all groups for the logged-in user
+exports.getAllGroups =catchAsync(async (req, res) => {
+  try{
+    // Find all groups where the user is either the admin or a member
+    // const groups = await GroupMessage.find({
+    //   $or: [
+    //     { admin: req.user._id },
+    //     { members: req.user._id },
+    //   ],
+    // });
+    const groups = await GroupMessage.find({
+      $or: [
+        { admin: req.user._id },
+        { members: req.user._id },
+      ],
+    })
+    .populate('admin')  // Populate the 'admin' field
+    .populate('members'); // Populate the 'members' field
+
+    res.status(200).json({
+      status: 'success',
+      data: groups ,
+      message: 'All groups found successfully',
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+
+});
+
+//Delete a group
+exports.deleteGroup =catchAsync(async (req, res) => {
+  const groupId = req.params.groupId;
+
+  // Validate if groupId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(groupId)) {
+    return res.status(400).json({ error: 'Invalid group ID' });
+  }
+
+  // Find the group and check if the logged-in user is the admin
+  const group = await GroupMessage.findOne({ _id: groupId, admin: req.user._id });
+
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found or you do not have permission to delete it' });
+  }
+
+  // Delete the group
+  await GroupMessage.findByIdAndDelete(groupId);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Group deleted successfully',
+  });
+});
+
+//Get a group details by group Id
+exports.getGroupById =catchAsync(async (req, res) => {
+  const groupId = req.params.groupId;
+
+  // Validate if groupId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(groupId)) {
+    return res.status(400).json({ error: 'Invalid group ID' });
+  }
+
+  // Find the group by ID
+  const group = await GroupMessage.findOne({ _id: groupId })
+    .populate('admin')  // Populate the 'admin' field
+    .populate('members'); // Populate the 'members' field
+
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found' });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: group,
+    message: 'Group retrieved successfully',
+  });
+});
+
+
+
+
 
 
 // Add Message
