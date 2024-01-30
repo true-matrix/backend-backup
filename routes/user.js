@@ -86,6 +86,7 @@ router.delete("/group/:groupId",authController.protect,  messageController.delet
 router.get("/group/:groupId",authController.protect,  messageController.getGroupById);
 router.post("/group/sendmessage",authController.protect, uploadFilesMiddleware, messageController.sendGroupMessage);
 router.get("/group/:groupId/messages",authController.protect,  messageController.getGroupMessages);
+router.post("/group/resetUnreadGroupMessage",authController.protect,  userController.resetUnreadGroupMessagesCount);
 
 
 

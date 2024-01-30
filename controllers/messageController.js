@@ -209,39 +209,166 @@ exports.createGroup =catchAsync(async (req, res) => {
 });
 
 //Get all groups for the logged-in user
-exports.getAllGroups =catchAsync(async (req, res) => {
-  try{
-    // Find all groups where the user is either the admin or a member
-    // const groups = await Group.find({
-    //   $or: [
-    //     { admin: req.user._id },
-    //     { members: req.user._id },
-    //   ],
-    // });
-    const groups = await Group.find({
-      $or: [
-        { admin: req.user._id },
-        { members: req.user._id },
-      ],
-    })
-    .populate('admin')  // Populate the 'admin' field
-    .populate('members'); // Populate the 'members' field
+// exports.getAllGroups =catchAsync(async (req, res) => {
+//   try{
+//     // Find all groups where the user is either the admin or a member
+//     // const groups = await Group.find({
+//     //   $or: [
+//     //     { admin: req.user._id },
+//     //     { members: req.user._id },
+//     //   ],
+//     // });
+//     const groups = await Group.find({
+//       $or: [
+//         { admin: req.user._id },
+//         { members: req.user._id },
+//       ],
+//     })
+//     .populate('admin')  // Populate the 'admin' field
+//     .populate('members'); // Populate the 'members' field
 
-    res.status(200).json({
-      status: 'success',
-      data: groups ,
-      message: 'All groups found successfully',
-    });
+//     res.status(200).json({
+//       status: 'success',
+//       data: groups ,
+//       message: 'All groups found successfully',
+//     });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       status: 'error',
+//       message: 'Internal server error',
+//     });
+//   }
 
+// });
+
+// exports.getAllGroups = catchAsync(async (req, res) => {
+//   try {
+//     // Find all groups where the user is either the admin or a member
+//     const groups = await Group.find({
+//       $or: [
+//         { admin: req.user._id },
+//         { members: req.user._id },
+//       ],
+//     })
+//     .populate('admin')  // Populate the 'admin' field
+//     .populate('members'); // Populate the 'members' field
+
+//     // Get messages related to the groups
+//     const groupIds = groups.map(group => group._id);
+//     const messages = await GroupMessage.find({ group: { $in: groupIds } });
+
+//     console.log('messages==>',messages);
+//     // Prepare objects to store the last sent text and unread messages count
+//     const lastSentTexts = {};
+//     const unreadMessagesCounts = {};
+
+//     // Iterate through messages to find the last sent text and count unread messages
+//     messages.forEach(message => {
+//       const otherUserId = message.sender.equals(req.user._id) ? message.group.admin : message.sender;
+
+//       // Count only the receiver's unseen messages
+//       if (message.group.members?.includes(req.user._id) && !message.seenBy?.includes(req.user._id)) {
+//         unreadMessagesCounts[otherUserId] = (unreadMessagesCounts[otherUserId] || 0) + 1;
+//       }
+
+//       // Update last sent text if the current message is more recent
+//       if (!lastSentTexts[otherUserId] || message.createdAt > lastSentTexts[otherUserId].createdAt) {
+//         lastSentTexts[otherUserId] = {
+//           text: message.message,
+//           createdAt: message.createdAt,
+//         };
+//       }
+//     });
+
+//     // Add last sent text and unread messages count to each user in the response
+//     const groupsWithLastSentText = groups.map(group => ({
+//       ...group._doc,
+//       lastSentText: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].text : null,
+//       lastSentTextTime: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].createdAt.toISOString() : null,
+//       unreadMessagesCount: unreadMessagesCounts[group.admin._id] || 0,
+//     }));
+
+//     // Sort groups based on lastSentTextTime in descending order
+//     groupsWithLastSentText.sort((a, b) => new Date(b.lastSentTextTime) - new Date(a.lastSentTextTime));
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: groupsWithLastSentText,
+//       message: 'All groups found successfully',
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       status: 'error',
+//       message: 'Internal server error',
+//     });
+//   }
+// });
+
+exports.getAllGroups = catchAsync(async (req, res) => {
+  // Find all groups where the user is either the admin or a member
+  const groups = await Group.find({
+    $or: [
+      { admin: req.user._id },
+      { members: req.user._id },
+    ],
+  })
+  .populate('admin')  // Populate the 'admin' field
+  .populate('members'); // Populate the 'members' field
+
+  // Get messages related to the groups
+  const groupIds = groups.map(group => group._id);
+  const messages = await GroupMessage.find({ group: { $in: groupIds } })
+    .populate('sender') // Populate the 'sender' field
+    .populate('group');  // Populate the 'group' field
+
+  // Prepare objects to store the last sent text and unread messages count
+  const lastSentTexts = {};
+  const unreadMessagesCounts = {};
+
+  // Iterate through messages to find the last sent text and count unread messages
+  messages.forEach(message => {
+    const otherUserId = message.sender._id.equals(req.user._id) ? message.group.admin._id : message.sender._id;
+
+    // Count only the receiver's unseen messages
+    if (
+      message.group.members.includes(req.user._id) && // Receiver is a member
+      !message.seenBy.includes(req.user._id) &&        // Message is not seen by the receiver
+      message.sender._id !== req.user._id              // Sender is not the receiver (admin sending to group)
+    ) {
+      unreadMessagesCounts[otherUserId] = (unreadMessagesCounts[otherUserId] || 0) + 1;
+    }
+
+    // Update last sent text if the current message is more recent
+    if (!lastSentTexts[otherUserId] || message.createdAt > lastSentTexts[otherUserId].createdAt) {
+      lastSentTexts[otherUserId] = {
+        text: message.message,
+        createdAt: message.createdAt,
+      };
+    }
+  });
+
+  // Add last sent text and unread messages count to each user in the response
+  const groupsWithLastSentText = groups.map(group => ({
+    ...group._doc,
+    lastSentText: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].text : null,
+    lastSentTextTime: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].createdAt.toISOString() : null,
+    unreadMessagesCount: unreadMessagesCounts[group.admin._id] || 0,
+  }));
+
+  // Sort groups based on lastSentTextTime in descending order
+  groupsWithLastSentText.sort((a, b) => new Date(b.lastSentTextTime) - new Date(a.lastSentTextTime));
+
+  res.status(200).json({
+    status: 'success',
+    data: groupsWithLastSentText,
+    message: 'All groups found successfully',
+  });
 });
+
 
 //Delete a group
 exports.deleteGroup =catchAsync(async (req, res) => {
@@ -315,7 +442,6 @@ exports.sendGroupMessage = catchAsync( async (req, res, next) => {
 
     // Save the new message to the database
     const savedMessage = await newMessage.save();
-
     res.status(200).json({
       status: 'success',
       data: savedMessage,
