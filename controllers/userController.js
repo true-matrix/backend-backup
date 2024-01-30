@@ -9,6 +9,8 @@ const AudioCall = require("../models/audioCall");
 const FriendRequest = require("../models/friendRequest");
 const User = require("../models/user");
 const Message = require("../models/message");
+const GroupMessage = require("../models/GroupMessage");
+const Group = require("../models/Group");
 const VideoCall = require("../models/videoCall");
 const catchAsync = require("../utils/catchAsync");
 const filterObj = require("../utils/filterObj");
@@ -642,6 +644,87 @@ exports.resetUnreadMessagesCount = catchAsync(async (req, res, next) => {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });  
+
+// exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+//   try {
+//     const { userId, groupId } = req.body;
+
+//     // Implement logic to reset unreadGroupMessagesCount in your database
+//     // For example, using Mongoose:
+//     await GroupMessage.updateMany(
+//       { group: groupId, seenBy: { $ne: userId } }, // Update messages in the group not seen by the user
+//       { $addToSet: { seenBy: userId } } // Add user to seenBy array
+//     );
+
+//     // Respond with success
+//     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: 'error', message: 'Internal server error' });
+//   }
+// });
+
+// exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+//   try {
+//     const { userId, groupId } = req.body;
+
+//     // Find all users in the group
+//     const group = await Group.findById(groupId).populate('members', '_id');
+
+//     if (!group) {
+//       return res.status(404).json({ status: 'error', message: 'Group not found' });
+//     }
+
+//     const groupMemberIds = group.members.map(member => member._id);
+
+//     // Reset unreadGroupMessagesCount for each member individually
+//     await Promise.all(groupMemberIds.map(async memberId => {
+//       await GroupMessage.updateMany(
+//         { group: groupId, seenBy: { $ne: memberId } }, // Update messages in the group not seen by the user
+//         { $addToSet: { seenBy: memberId } } // Add user to seenBy array
+//       );
+//     }));
+
+//     // Respond with success
+//     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: 'error', message: 'Internal server error' });
+//   }
+// });
+exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+  try {
+    const { userId, groupId } = req.body;
+
+    // Find all users in the group
+    const group = await Group.findById(groupId).populate('members', '_id');
+
+    if (!group) {
+      return res.status(404).json({ status: 'error', message: 'Group not found' });
+    }
+
+    const groupMemberIds = group.members.map(member => member._id);
+
+    // Reset unreadGroupMessagesCount for each member individually
+    await Promise.all(groupMemberIds.map(async memberId => {
+      if (memberId !== userId) {  // Skip resetting count for the current user
+        await GroupMessage.updateMany(
+          { group: groupId, seenBy: { $ne: memberId } }, // Update messages in the group not seen by the user
+          { $addToSet: { seenBy: memberId } } // Add user to seenBy array
+        );
+      }
+    }));
+
+    // Respond with success
+    res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+
+
 
 exports.searchUsers = catchAsync(async (req, res) => {
   const { name } = req.query;

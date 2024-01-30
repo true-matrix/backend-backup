@@ -36,6 +36,8 @@ const server = http.createServer(app);
 const { promisify } = require("util");
 const User = require("./models/user");
 const Message = require("./models/message");
+const Group = require("./models/Group");
+const GroupMessage = require("./models/GroupMessage");
 const FriendRequest = require("./models/friendRequest");
 const OneToOneMessage = require("./models/OneToOneMessage");
 const AudioCall = require("./models/audioCall");
@@ -100,7 +102,18 @@ const io = require('socket.io')(server, {
   }
 })
 
+// Attach the io instance to the request
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 let users = [];
+const userGroups = {}; // Keep track of user's group memberships
+const groups = {}; // Keep track of groups and their members
+
+const groupMessageStatus = {};
+
 const addUser = (userId, socketId) => {
   console.log("userData",userId," socketId",socketId);
   
@@ -114,6 +127,71 @@ const removeUser = (socketId) => {
 const getUser = (userId) => {
   return users.find(user => user?.userId == userId )
 }
+const createGroup = (groupId, members) => {
+  groups[groupId] = members;
+};
+const getGroupMembers = (groupId) => {
+  return groups[groupId] || [];
+};
+const getGroupsInfo = () => {
+  const groupsInfo = [];
+  for (const groupId in groups) {
+    const groupMembers = getGroupMembers(groupId).map((memberSocketId) => ({
+      memberId: getUserIdFromSocketId(memberSocketId),
+      memberSocketId,
+    }));
+
+    groupsInfo.push({
+      groupId,
+      groupSocketId: groups[groupId][0], // Assuming the group socket ID is the first member's socket ID
+      groupMembers,
+    });
+  }
+  return groupsInfo;
+};
+
+const getUserIdFromSocketId = (socketId) => {
+  const user = users.find((u) => u.socketId === socketId);
+  return user ? user.userId : null;
+};
+
+const joinGroup = (socketId, groupId) => {
+  if (!userGroups[socketId]) {
+    userGroups[socketId] = [];
+  }
+  if (!userGroups[socketId].includes(groupId)) {
+    userGroups[socketId].push(groupId);
+  }
+
+  if (!groups[groupId]) {
+    groups[groupId] = [];
+  }
+  groups[groupId].push(socketId);
+  console.log('groups',groups);
+  console.log('userGroups',userGroups);
+};
+
+const leaveGroup = (socketId, groupId) => {
+  if (userGroups[socketId]) {
+    userGroups[socketId] = userGroups[socketId].filter((group) => group !== groupId);
+  }
+
+  if (groups[groupId]) {
+    groups[groupId] = groups[groupId].filter((user) => user !== socketId);
+  }
+};
+const removeGroup = (groupId) => {
+  // Remove the group and associated sockets
+  if (groups[groupId]) {
+    groups[groupId].forEach((socketId) => {
+      leaveGroup(socketId, groupId);
+      io.to(socketId).socketsLeave(groupId); // Use socketsLeave to leave the room using socket ID
+    });
+    delete groups[groupId];
+  }
+};
+
+
 
 io.on("connection",async (socket)=> {
   console.log("Connected to Socket.io");
@@ -126,12 +204,34 @@ io.on("connection",async (socket)=> {
   // // Send the current verification status to the client when they connect
   // socket.emit('verificationStatus', status?.verified);
 
-  socket.on("setup",async (userId) => {
+  socket.on("setup",async (userId, groupIds) => {
+    // console.log("groupIds",groupIds);
     if(userId != null){
     socket.join(userId);
     console.log("socket.id=>",socket.id);
     console.log("userId.id=>",userId);
-    addUser(userId,socket.id)
+   
+    // Join the groups if groupIds are provided
+    if (groupIds && Array.isArray(groupIds)) {
+      groupIds.forEach((groupId) => {
+        socket.join(groupId);
+        addUser(userId, socket.id);
+        joinGroup(socket.id, groupId);
+
+        const groupMembers = getGroupMembers(groupId);
+        groupMembers.forEach((memberSocketId) => {
+          io.to(memberSocketId).emit("groupUsers", groupMembers);
+        });
+        
+        // io.to(groupId).emit("groupUsers", groupMembers);
+      });
+      const groupsInfo = getGroupsInfo();
+        socket.emit("groupsInfo", groupsInfo);
+    } else {
+      addUser(userId, socket.id);
+    }
+
+    // addUser(userId,socket.id)
     const objectId =new mongoose.Types.ObjectId(userId);
     await User.findByIdAndUpdate({_id: objectId}, {$set:{verified: true}})
     const status =await User.findById(objectId, { _id: 0, verified: 1 });
@@ -171,16 +271,49 @@ io.on("connection",async (socket)=> {
       // console.log(`User ${socket.id} left chat room: ${room}`);
     });
 
+    socket.on('join  groupchat', ({ groupId }) => {
+      socket.join(groupId);
+    })
+
+    socket.on("leave groupchat", async ({ groupId }) => {
+      socket.leave(groupId);
+    });
+
   socket.on("new message", (formData)=>{
-    console.log('new message',formData);
-    const user = getUser(formData?.receiver?._id)
-    // const room = createRoomId(formData?.sender?._id, formData?.receiver?._id);
-    socket.to(user?.socketId).emit("message received", formData)
-    socket.to(user?.socketId).emit("getNotification",{
-      senderId : formData?.sender?._id,
-      isRead: false,
-      date: new Date()
-      })
+    // console.log('new message',formData);
+    // const { receiver, groupId } = formData;
+    let receivers = [];
+    if (formData?.groupId) {
+      // If it's a group message, send to all group members
+      receivers = getGroupMembers(formData?.groupId);
+      receivers.forEach((receiverSocketId) => {
+        io.to(receiverSocketId).emit("groupMessageReceived", formData);
+      });
+    } else {
+      // If it's a private message, send to the specified receiver
+      const user = getUser(formData?.receiver?._id);
+      if (user) {
+        receivers.push(user.socketId);
+        socket.to(user.socketId).emit("message received", formData);
+      }
+    }
+    /*******************  Old Code for Single msg ***********************/
+    // const user = getUser(formData?.receiver?._id)
+    // socket.to(user?.socketId).emit("message received", formData)
+    // socket.to(user?.socketId).emit("getNotification",{
+    //   senderId : formData?.sender?._id,
+    //   isRead: false,
+    //   date: new Date()
+    //   })
+
+      // Notify all receivers (either individual or group)
+      receivers.forEach((receiverId) => {
+        socket.to(receiverId).emit("getNotification", {
+          senderId: formData?.sender?._id,
+          isRead: false,
+          date: new Date(),
+        });
+      });
   })
 
   socket.on('deleteMessage', async (messageId) => {
@@ -207,6 +340,136 @@ io.on("connection",async (socket)=> {
     }
   });
 
+  //Group Message Socket Start
+
+  // socket.on('createGroup', async (groupData) => {
+  //   try {
+  //     // Extract data from the socket and groupData
+  //     const { socketId } = socket;
+  //     const { groupname, description, admin, members } = groupData;
+  
+  //     // Create a new group using the Group model
+  //     const newGroup = new Group({
+  //       groupname,
+  //       description,
+  //       admin,
+  //       members,
+  //     });
+  
+  //     // Save the new group to the database
+  //     const savedGroup = await newGroup.save();
+  
+  //     // Update the user's information with the new group data
+  //     // Assuming the User model has a groups field to store information about groups
+  //     await User.findByIdAndUpdate(admin, { $push: { groups: savedGroup._id } });
+  
+  //     // Store the group data using the socket.id
+  //     const socketGroupData = {
+  //       groupId: savedGroup._id,
+  //       groupname: savedGroup.groupname,
+  //       admin: savedGroup.admin,
+  //       members: savedGroup.members,
+  //     };
+  
+  //     // Emit the groupCreated event with the stored group data
+  //     io.to(socketId).emit('groupCreated', {
+  //       group: socketGroupData,
+  //       message: 'New group created',
+  //     });
+  //   } catch (error) {
+  //     console.error('Error creating group:', error.message);
+  //     // Handle the error as needed
+  //   }
+  // });
+
+  socket.on('joinGroup', ({ groupId, userId }) => {
+    // Join the group and update message status for the joining user
+    socket.join(groupId);
+
+    if (!groupMessageStatus[groupId]) {
+      groupMessageStatus[groupId] = {};
+    }
+    groupMessageStatus[groupId][userId] = 'unseen';
+    io.to(socket.id).emit('updateStatus', { groupId, groupMessageStatus });
+
+  });
+
+ socket.on('groupMessage', async ({ groupId, userId, content }) => {
+  console.log("groupId ==>",groupId);
+  console.log("userId ==>",userId);
+  console.log("content ==>",content);
+    // Save the message to MongoDB
+    // const newMessage = new GroupMessage({
+    //   group: groupId,
+    //   sender: userId,
+    //   message: content,
+    // });
+
+    // await newMessage.save();
+
+    // Broadcast the message to the group
+    io.to(groupId).emit('groupMessage', { userId, content });
+
+    // Update message status to unseen for other users in the group
+    if (!groupMessageStatus[groupId]) {
+      groupMessageStatus[groupId] = {};
+    }
+    groupMessageStatus[groupId][userId] = 'unseen';
+    io.to(groupId).emit('updateStatus', { groupId, groupMessageStatus });
+    });
+    // socket.on('groupMessageSent', async ({ groupId, userId, content }) => {
+    //   try {
+    //     const newMessage = new GroupMessage({
+    //       group: groupId,
+    //       sender: userId,
+    //       message: content,
+    //     });
+  
+    //     await newMessage.save();
+  
+    //     // Broadcast the message to the group
+    //     io.to(groupId).emit('groupMessageReceived', { userId, content });
+  
+    //     // Update message status to unseen for other users in the group
+    //     groupMessageStatus[groupId] = { ...groupMessageStatus[groupId], [userId]: 'unseen' };
+    //     io.to(groupId).emit('updateStatus', { groupId, groupMessageStatus });
+    //   } catch (error) {
+    //     console.error('Error handling groupMessageSent:', error.message);
+    //   }
+    // });
+      // Event for group message sent
+  socket.on("groupMessageSent", (formData) => {
+    // const { group } = formData;
+    const groupMembers = getGroupMembers(formData?.group);
+    groupMembers.forEach((memberSocketId) => {
+      io.to(memberSocketId).emit("groupMessageReceived", formData);
+    });
+  });
+
+  socket.on("leave group", (groupId) => {
+    const socketId = socket.id;
+    leaveGroup(socketId, groupId);
+    socket.leave(groupId);
+    const groupMembers = getGroupMembers(groupId);
+    groupMembers.forEach((memberSocketId) => {
+      io.to(memberSocketId).emit("groupUsers", groupMembers);
+    });
+
+    const groupsInfo = getGroupsInfo();
+    io.emit("groupsInfo", groupsInfo);
+  });
+
+    socket.on('markAsSeen', async ({ groupId, userId }) => {
+      // Mark the message as seen and update status for other users in the group
+      groupMessageStatus[groupId][userId] = 'seen';
+      io.to(groupId).emit('updateStatus', { groupId, groupMessageStatus });
+    });
+ // Event for deleting a group
+ socket.on('delete group', (groupId) => {
+  removeGroup(groupId);
+  const groupsInfo = getGroupsInfo();
+  io.emit('groupsInfo', groupsInfo);
+});
   // // Handle event when a user reads a message
   // socket.on('messageRead', async (data) => {
   //   // Assuming data includes the sender and receiver user IDs
@@ -234,7 +497,21 @@ io.on("connection",async (socket)=> {
     removeUser(socket.id);
     let status =await User.findById(objectId, { _id: 0, verified: 1 });
     socket.emit('verificationStatus', status?.verified);
+
+    const socketId = socket.id;
+    if (userGroups[socketId]) {
+      userGroups[socketId].forEach((groupId) => {
+        leaveGroup(socketId, groupId);
+        io.sockets.sockets[socketId]?.leave(groupId);
+      });
+      delete userGroups[socketId];
+    }
+
     io.emit('getUsers', users);
+
+     // Update groups information
+     const groupsInfo = getGroupsInfo();
+     io.emit('groupsInfo', groupsInfo);
   })
 
 })
