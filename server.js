@@ -442,6 +442,8 @@ io.on("connection",async (socket)=> {
     // const { group } = formData;
     const groupMembers = getGroupMembers(formData?.group);
     groupMembers.forEach((memberSocketId) => {
+      // console.log('memberSocketId=>',memberSocketId);
+      // console.log('groupMembers=>',groupMembers);
       io.to(memberSocketId).emit("groupMessageReceived", formData);
     });
   });
