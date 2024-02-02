@@ -40,3 +40,5 @@ const groupMessageSchema = new mongoose.Schema({
 
 const GroupMessage = mongoose.model('GroupMessage', groupMessageSchema);
 module.exports = GroupMessage;
+
+

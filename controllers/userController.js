@@ -692,6 +692,7 @@ exports.resetUnreadMessagesCount = catchAsync(async (req, res, next) => {
 //     res.status(500).json({ status: 'error', message: 'Internal server error' });
 //   }
 // });
+
 exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
   try {
     const { userId, groupId } = req.body;
@@ -705,12 +706,20 @@ exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
 
     const groupMemberIds = group.members.map(member => member._id);
 
+    console.log('groupMemberIds==>',groupMemberIds);
+    console.log('typeof memberId==>',typeof groupMemberIds[0]);
+    console.log('typeof userId==>',typeof userId);
+
+    const objectId = new ObjectId(userId);
+    console.log('typeof objectId==>',typeof objectId);
+
     // Reset unreadGroupMessagesCount for each member individually
     await Promise.all(groupMemberIds.map(async memberId => {
-      if (memberId !== userId) {  // Skip resetting count for the current user
+      if (memberId !== objectId) {  // Skip resetting count for the current user
         await GroupMessage.updateMany(
           { group: groupId, seenBy: { $ne: memberId } }, // Update messages in the group not seen by the user
-          { $addToSet: { seenBy: memberId } } // Add user to seenBy array
+          { $addToSet: { seenBy: memberId } }, // Add user to seenBy array
+          { $set: { unreadMessagesCount: 0 } }
         );
       }
     }));
@@ -722,6 +731,38 @@ exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
+
+// exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+//   try {
+//     const { userId, groupId } = req.body;
+
+//     // Find the group and its members
+//     const group = await Group.findById(groupId).populate('members', '_id');
+
+//     if (!group) {
+//       return res.status(404).json({ status: 'error', message: 'Group not found' });
+//     }
+
+//     // Ensure that the user making the request is a member of the group
+//     const isUserInGroup = group.members.some(member => member._id.equals(req.user._id));
+//     if (!isUserInGroup) {
+//       return res.status(403).json({ status: 'error', message: 'Unauthorized. User is not a member of the group.' });
+//     }
+
+//     // Reset unreadMessagesCount for the specified user within the group
+//     await GroupMessage.updateMany(
+//       { group: groupId, sender: userId },
+//       { $set: { 'unreadMessagesCount.$': 0 } }
+//     );
+
+//     // Respond with success
+//     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: 'error', message: 'Internal server error' });
+//   }
+// });
+
 
 
 

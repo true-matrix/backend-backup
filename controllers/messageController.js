@@ -330,20 +330,52 @@ exports.getAllGroups = catchAsync(async (req, res) => {
   const unreadMessagesCounts = {};
 
   // Iterate through messages to find the last sent text and count unread messages
+  // messages.forEach(message => {
+  //   const otherUserId = message.sender._id.equals(req.user._id) ? message.group.admin._id : message.sender._id;
+
+  //   // Count only the receiver's unseen messages
+  //   if (
+  //     message.group.members.includes(req.user._id) && // Receiver is a member
+  //     !message.seenBy.includes(req.user._id) &&        // Message is not seen by the receiver
+  //     message.sender._id !== req.user._id              // Sender is not the receiver (admin sending to group)
+  //   ) {
+  //     unreadMessagesCounts[otherUserId] = (unreadMessagesCounts[otherUserId] || 0) + 1;
+  //   }
+
+  //   // Update last sent text if the current message is more recent
+  //   if (!lastSentTexts[otherUserId] || message.createdAt > lastSentTexts[otherUserId].createdAt) {
+  //     lastSentTexts[otherUserId] = {
+  //       text: message.message,
+  //       createdAt: message.createdAt,
+  //     };
+  //   }
+  // });
+  
   messages.forEach(message => {
-    const otherUserId = message.sender._id.equals(req.user._id) ? message.group.admin._id : message.sender._id;
+    let otherUserId;
+
+    // Determine the other user based on the message sender and group admin/members
+    if (message.sender._id.equals(req.user._id)) {
+      // If the sender is the user, otherUserId should be one of the group members
+      const memberId = message.group.members.find(member => member._id.equals(req.user._id));
+      otherUserId = memberId ? memberId._id.toString() : null;
+    } else {
+      // If the sender is not the user, otherUserId should be the admin of the group
+      otherUserId = message.group.admin._id.toString();
+    }
 
     // Count only the receiver's unseen messages
     if (
-      message.group.members.includes(req.user._id) && // Receiver is a member
+      otherUserId && // Ensure otherUserId is not null
+      message.group.members.some(member => member._id.equals(req.user._id)) && // Receiver is a member
       !message.seenBy.includes(req.user._id) &&        // Message is not seen by the receiver
-      message.sender._id !== req.user._id              // Sender is not the receiver (admin sending to group)
+      !message.sender._id.equals(req.user._id)        // Sender is not the receiver (admin sending to group)
     ) {
       unreadMessagesCounts[otherUserId] = (unreadMessagesCounts[otherUserId] || 0) + 1;
     }
 
     // Update last sent text if the current message is more recent
-    if (!lastSentTexts[otherUserId] || message.createdAt > lastSentTexts[otherUserId].createdAt) {
+    if (otherUserId && (!lastSentTexts[otherUserId] || message.createdAt > lastSentTexts[otherUserId].createdAt)) {
       lastSentTexts[otherUserId] = {
         text: message.message,
         createdAt: message.createdAt,
@@ -352,12 +384,35 @@ exports.getAllGroups = catchAsync(async (req, res) => {
   });
 
   // Add last sent text and unread messages count to each user in the response
+  // console.log("groups==>",groups);
+
   const groupsWithLastSentText = groups.map(group => ({
     ...group._doc,
     lastSentText: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].text : null,
     lastSentTextTime: lastSentTexts[group.admin._id] ? lastSentTexts[group.admin._id].createdAt.toISOString() : null,
     unreadMessagesCount: unreadMessagesCounts[group.admin._id] || 0,
   }));
+
+//   const groupsWithLastSentText = groups.map(group => {
+//     const groupData = group._doc
+//     // Get unique member IDs (including admin)
+//     const memberIds = [...new Set([groupData.admin._id, ...groupData.members.map(member => member._id)].map(id => id.toString()))];
+// console.log('memberIds==>',memberIds);
+// memberIds.forEach((memberId) => console.log('lastSentTexts[memberId]',lastSentTexts[memberId]))
+
+//     // Prepare lastSentText and unreadMessagesCount for each member
+//     const memberData = memberIds.map(memberId => ({
+//       _id: memberId,
+//       lastSentText: lastSentTexts[memberId] ? lastSentTexts[memberId].text : null,
+//       lastSentTextTime: lastSentTexts[memberId] ? lastSentTexts[memberId].createdAt.toISOString() : null,
+//       unreadMessagesCount: unreadMessagesCounts[memberId] || 0,
+//     }));
+
+//     return {
+//       ...groupData,
+//       members: memberData,
+//     };
+//   });
 
   // Sort groups based on lastSentTextTime in descending order
   groupsWithLastSentText.sort((a, b) => new Date(b.lastSentTextTime) - new Date(a.lastSentTextTime));
