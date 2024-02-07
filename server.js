@@ -446,6 +446,16 @@ io.on("connection",async (socket)=> {
       // console.log('groupMembers=>',groupMembers);
       io.to(memberSocketId).emit("groupMessageReceived", formData);
     });
+
+    // Notify all receivers (in a group)
+    groupMembers.forEach((memberSocketId) => {
+      socket.to(memberSocketId).emit("getNotification", {
+        senderId: formData?.sender?._id,
+        isRead: false,
+        date: new Date(),
+      });
+    });
+
   });
 
   socket.on("leave group", (groupId) => {
