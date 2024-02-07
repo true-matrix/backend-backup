@@ -693,36 +693,115 @@ exports.resetUnreadMessagesCount = catchAsync(async (req, res, next) => {
 //   }
 // });
 
+// exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+//   try {
+//     const { userId, groupId } = req.body;
+
+//     // Find all users in the group
+//     const group = await Group.findById(groupId).populate('members', '_id');
+
+//     if (!group) {
+//       return res.status(404).json({ status: 'error', message: 'Group not found' });
+//     }
+
+//     const groupMemberIds = group.members.map(member => member._id);
+
+//     console.log('groupMemberIds==>',groupMemberIds);
+//     console.log('typeof memberId==>',typeof groupMemberIds[0]);
+//     console.log('typeof userId==>',typeof userId);
+
+//     const objectId = new ObjectId(userId);
+//     console.log('typeof objectId==>',typeof objectId);
+
+//     // Reset unreadGroupMessagesCount for each member individually
+//     await Promise.all(groupMemberIds.map(async memberId => {
+//       if (memberId !== objectId) {  // Skip resetting count for the current user
+//         await GroupMessage.updateMany(
+//           { group: groupId, seenBy: { $ne: memberId } }, // Update messages in the group not seen by the user
+//           { $addToSet: { seenBy: memberId } }, // Add user to seenBy array
+//           { $set: { unreadMessagesCount: 0 } }
+//         );
+//       }
+//     }));
+
+//     // Respond with success
+//     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: 'error', message: 'Internal server error' });
+//   }
+// });
+
+//6th Feb : Bug - resetUnreadGroupMessagesCount for each user if any member seen the message 
+// exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
+//   try {
+//     const { userId, groupId } = req.body;
+
+//     // Find the group, including the admin and members
+//     const group = await Group.findById(groupId)
+//       .populate({
+//         path: 'admin',
+//         select: '_id',
+//       })
+//       .populate({
+//         path: 'members',
+//         select: '_id',
+//       });
+
+//     if (!group) {
+//       return res.status(404).json({ status: 'error', message: 'Group not found' });
+//     }
+
+//     // Create an array of user IDs in the group, including the admin
+//     const groupMemberIds = [...group.members.map(member => member._id.toString()), group.admin._id.toString()];
+
+//     // Reset unreadGroupMessagesCount for each member individually
+//     await Promise.all(groupMemberIds.map(async memberId => {
+//       await GroupMessage.updateMany(
+//         {
+//           group: groupId,
+//           seenBy: { $ne: memberId },
+//         },
+//         { $addToSet: { seenBy: memberId }, $set: { unreadMessagesCount: 0 } }
+//       );
+//     }));
+
+//     // Respond with success
+//     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: 'error', message: 'Internal server error' });
+//   }
+// });
+
+//7th Feb : Update - Solved Bug 6th Feb
 exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
   try {
     const { userId, groupId } = req.body;
 
-    // Find all users in the group
-    const group = await Group.findById(groupId).populate('members', '_id');
+    // Find the group, including the admin and members
+    const group = await Group.findById(groupId)
+      .populate({
+        path: 'admin',
+        select: '_id',
+      })
+      .populate({
+        path: 'members',
+        select: '_id',
+      });
 
     if (!group) {
       return res.status(404).json({ status: 'error', message: 'Group not found' });
     }
 
-    const groupMemberIds = group.members.map(member => member._id);
-
-    console.log('groupMemberIds==>',groupMemberIds);
-    console.log('typeof memberId==>',typeof groupMemberIds[0]);
-    console.log('typeof userId==>',typeof userId);
-
-    const objectId = new ObjectId(userId);
-    console.log('typeof objectId==>',typeof objectId);
-
-    // Reset unreadGroupMessagesCount for each member individually
-    await Promise.all(groupMemberIds.map(async memberId => {
-      if (memberId !== objectId) {  // Skip resetting count for the current user
-        await GroupMessage.updateMany(
-          { group: groupId, seenBy: { $ne: memberId } }, // Update messages in the group not seen by the user
-          { $addToSet: { seenBy: memberId } }, // Add user to seenBy array
-          { $set: { unreadMessagesCount: 0 } }
-        );
-      }
-    }));
+    // Reset unreadGroupMessagesCount only for the user triggering the reset
+    await GroupMessage.updateMany(
+      {
+        group: groupId,
+        seenBy: { $ne: userId },
+      },
+      { $addToSet: { seenBy: userId }, $set: { unreadMessagesCount: 0 } }
+    );
 
     // Respond with success
     res.status(200).json({ status: 'success', message: 'Unread group messages count reset successfully' });
@@ -731,6 +810,10 @@ exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
+
+
+
+
 
 // exports.resetUnreadGroupMessagesCount = catchAsync(async (req, res, next) => {
 //   try {
