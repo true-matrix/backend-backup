@@ -332,7 +332,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   // const userId = extractUserId(req);
   try {
     const user = await User.findOne({ _id: id });
-    console.log('user',user);
+    // console.log('user',user);
     if (user) {
       res.status(200).json({
         status: 'success',
