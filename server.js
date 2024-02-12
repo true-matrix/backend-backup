@@ -97,7 +97,9 @@ const io = require('socket.io')(server, {
   cors: {
     // origin: "http://localhost:3000",
     // origin: "https://wolf.blutrain.net",
-    origin: "http://wolfpackmessenger.com",
+    // origin: "http://wolfpackmessenger.com",
+    origin: "http://app.wolfpackmessenger.com",
+    // origin: "http://68.178.173.95:3000",
     methods: ["GET", "POST"]
   }
 })
