@@ -95,10 +95,10 @@ const io = require('socket.io')(server, {
   httpCompression: false,
   maxHttpBufferSize: 1e8,
   cors: {
-    // origin: "http://localhost:3000",
+    origin: "http://localhost:3000",
     // origin: "https://wolf.blutrain.net",
     // origin: "http://wolfpackmessenger.com",
-    origin: "http://app.wolfpackmessenger.com",
+    // origin: "http://app.wolfpackmessenger.com",
     // origin: "http://68.178.173.95:3000",
     methods: ["GET", "POST"]
   }
@@ -212,7 +212,7 @@ io.on("connection",async (socket)=> {
     socket.join(userId);
     console.log("socket.id=>",socket.id);
     console.log("userId.id=>",userId);
-   
+    addUser(userId, socket.id);
     // Join the groups if groupIds are provided
     if (groupIds && Array.isArray(groupIds)) {
       groupIds.forEach((groupId) => {
