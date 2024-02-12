@@ -567,7 +567,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   try {
     // const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
     // const resetURL = `https://wolf.blutrain.net/auth/new-password?token=${resetToken}`;
-    const resetURL = `http://wolfpackmessenger.com/auth/new-password?token=${resetToken}`;
+    // const resetURL = `http://wolfpackmessenger.com/auth/new-password?token=${resetToken}`;
+    const resetURL = `http://app.wolfpackmessenger.com/auth/new-password?token=${resetToken}`;
+    // const resetURL = `http://68.178.173.95:3000/auth/new-password?token=${resetToken}`;
     // TODO => Send Email with this Reset URL to user's email address
 
     console.log(resetURL);
