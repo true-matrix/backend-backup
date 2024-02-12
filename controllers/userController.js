@@ -902,6 +902,8 @@ exports.searchUsers = catchAsync(async (req, res) => {
 //   }
 // });
 
+///************************************Manage Alpha******************************************///
+//Update Alpha
 exports.updateUser = catchAsync(async (req, res, next) => {
   try {
     const userId = req.params.userId;
@@ -949,5 +951,472 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+//Get all alpha
+exports.getAllAlpha = catchAsync(async (req, res, next) => {
+  let token;
+  let remaining_users;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+
+    // Get the logged-in user details
+    const loggedInUser = await User.findById(userId);
+
+
+    // Check conditions based on the User Schema or Model
+    // if (
+    //   (loggedInUser.userRole === 'alpha' && loggedInUser._id.toString() === loggedInUser.addedBy) ||
+    //   loggedInUser.userRole === 'admin'
+    // ) {
+    //   // Retrieve users based on conditions
+    //   const all_users = await User.find();
+    //   remaining_users = all_users.filter(
+    //     (user) => user._id.toString() !== userId
+    //   );
+    //   next();
+    // } 
+    if (
+      (loggedInUser.userRole === 'admin')
+    ) {
+      remaining_users = await User.find({
+        userRole: 'alpha',
+      });
+      next();
+    }
+    else {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: remaining_users,
+    message: "Users found successfully!",
+  });
+});
+
+///************************************Manage Sigma******************************************///
+//Add Sigma
+exports.addSigma = catchAsync(async (req, res, next) => {
+  try{
+  const { email, phone } = req.body;
+
+  const filteredBody = filterObj(
+    req.body,
+    "name",
+    "email",
+    "password",
+    "phone",
+    "userRole",
+    "addedBy",
+    "aiStatus",
+    "gender"
+  );
+
+  // check if a verified user with given email exists
+
+  const existing_user = await User.findOne({ email: email });
+
+  if (existing_user) {
+    // user with this email already exists, Please login
+    return res.status(400).json({
+      status: "error",
+      message: "User already exists",
+    });
+  } else {
+    // if user is not created before than create a new one
+    const new_user = await User.create(filteredBody);
+    return res.status(201).json({
+      status: 'success',
+      data: new_user,
+      message: 'User added successfully',
+    });
+    // generate an otp and send to email
+  }}catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+//Delete Sigma
+exports.deleteSigma = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.id; // Assuming you pass the user ID in the request parameters
+
+    // Check if the user with the given ID exists
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Use deleteOne to delete the user
+    await User.deleteOne({ _id: userId });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//Update Sigma
+exports.updateSigma = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+
+    const updateFields = filterObj(
+      req.body,
+      'name',
+      'email',
+      'phone',
+      'userRole',
+      'gender'
+    );
+
+    // Check if the user with the given _id exists
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Avoid updating the password directly
+    if ('password' in updateFields) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password cannot be updated using this endpoint',
+      });
+    }
+
+    // Update the user fields
+    Object.assign(existingUser, updateFields);
+
+    // Save the updated user
+    const updatedUser = await existingUser.save();
+
+    return res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+      message: 'User updated successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//Get all Sigma
+// exports.getAllSigma = catchAsync(async (req, res, next) => {
+//   let token;
+//   let remaining_users;
+
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith("Bearer")
+//   ) {
+//     token = req.headers.authorization.split(" ")[1];
+//   } else if (req.cookies.jwt) {
+//     token = req.cookies.jwt;
+//   }
+//   if (!token) {
+//     return res.status(401).json({ message: 'User is already logged out!!!' });
+//   }
+
+//   try {
+//     const user = jwt.verify(token, process.env.JWT_SECRET);
+
+//     // Assuming user.userId is present in the decoded JWT payload
+//     const userId = user.userId;
+
+//     // Get the logged-in user details
+//     const loggedInUser = await User.findById(userId);
+
+
+//     // Check conditions based on the User Schema or Model
+//     if (
+//       (loggedInUser.userRole === 'sigma' && loggedInUser._id.toString() === loggedInUser.addedBy) ||
+//       loggedInUser.userRole === 'admin'
+//     ) {
+//       // Retrieve users based on conditions
+//       const all_users = await User.find();
+//       remaining_users = all_users.filter(
+//         (user) => user._id.toString() !== userId
+//       );
+//       next();
+//     } else {
+//       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+//     }
+//   } catch (error) {
+//     return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+//   }
+
+//   res.status(200).json({
+//     status: "success",
+//     data: remaining_users,
+//     message: "Users found successfully!",
+//   });
+// });
+exports.getAllSigma = catchAsync(async (req, res, next) => {
+  let token;
+  let remaining_users;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+
+    // Get the logged-in user details
+    const loggedInUser = await User.findById(userId);
+
+    // Check conditions based on the User Schema or Model
+    if (
+      (loggedInUser.userRole === 'alpha')
+    ) {
+      // Retrieve users based on conditions (addedBy == loggedInUser._id and userRole === 'sigma')
+      remaining_users = await User.find({
+        addedBy: loggedInUser._id,
+        userRole: 'sigma',
+      });
+      next();
+    } else if (
+      loggedInUser.userRole === 'admin') 
+      {
+      remaining_users = await User.find({
+        userRole: 'sigma',
+      });
+      next();
+    } else {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: remaining_users,
+    message: "Users found successfully!",
+  });
+});
+
+///************************************Manage Omega******************************************///
+//Add Omega
+exports.addOmega = catchAsync(async (req, res, next) => {
+  try{
+  const { email, phone } = req.body;
+
+  const filteredBody = filterObj(
+    req.body,
+    "name",
+    "email",
+    "password",
+    "phone",
+    "userRole",
+    "addedBy",
+    "aiStatus",
+    "gender"
+  );
+
+  // check if a verified user with given email exists
+
+  const existing_user = await User.findOne({ email: email });
+
+  if (existing_user) {
+    // user with this email already exists, Please login
+    return res.status(400).json({
+      status: "error",
+      message: "User already exists",
+    });
+  } else {
+    // if user is not created before than create a new one
+    const new_user = await User.create(filteredBody);
+    return res.status(201).json({
+      status: 'success',
+      data: new_user,
+      message: 'User added successfully',
+    });
+    // generate an otp and send to email
+  }}catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+//Delete Omega
+exports.deleteOmega = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.id; // Assuming you pass the user ID in the request parameters
+
+    // Check if the user with the given ID exists
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Use deleteOne to delete the user
+    await User.deleteOne({ _id: userId });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//Update Omega
+exports.updateOmega = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+
+    const updateFields = filterObj(
+      req.body,
+      'name',
+      'email',
+      'phone',
+      'userRole',
+      'gender'
+    );
+
+    // Check if the user with the given _id exists
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Avoid updating the password directly
+    if ('password' in updateFields) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password cannot be updated using this endpoint',
+      });
+    }
+
+    // Update the user fields
+    Object.assign(existingUser, updateFields);
+
+    // Save the updated user
+    const updatedUser = await existingUser.save();
+
+    return res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+      message: 'User updated successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//Get all Omega
+// exports.getAllOmega = catchAsync(async (req, res, next) => {
+//   let token;
+//   let remaining_users;
+
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith("Bearer")
+//   ) {
+//     token = req.headers.authorization.split(" ")[1];
+//   } else if (req.cookies.jwt) {
+//     token = req.cookies.jwt;
+//   }
+//   if (!token) {
+//     return res.status(401).json({ message: 'User is already logged out!!!' });
+//   }
+
+//   try {
+//     const user = jwt.verify(token, process.env.JWT_SECRET);
+
+//     // Assuming user.userId is present in the decoded JWT payload
+//     const userId = user.userId;
+
+//     // Get the logged-in user details
+//     const loggedInUser = await User.findById(userId);
+
+//     // Check conditions based on the User Schema or Model
+//     if (
+//       (loggedInUser.userRole === 'alpha')
+//     ) {
+//       // Retrieve users based on conditions (addedBy == loggedInUser._id and userRole === 'sigma')
+//       remaining_users = await User.find({
+//         addedBy: loggedInUser._id,
+//         userRole: 'sigma',
+//       });
+//       next();
+//     } else if (
+//       loggedInUser.userRole === 'admin') 
+//       {
+//       remaining_users = await User.find({
+//         userRole: 'sigma',
+//       });
+//       next();
+//     } else {
+//       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+//     }
+//   } catch (error) {
+//     return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+//   }
+
+//   res.status(200).json({
+//     status: "success",
+//     data: remaining_users,
+//     message: "Users found successfully!",
+//   });
+// });
+
+
+
 
 

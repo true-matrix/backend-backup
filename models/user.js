@@ -21,7 +21,14 @@ const userSchema = new mongoose.Schema({
   },
   userRole: {
     type: String,
-    default: "alpha",
+  },
+  addedBy: {
+    type: String,
+  },
+  aiStatus: {
+    // active inactive status
+    type: String,
+    default: "active"
   },
   email: {
     type: String,

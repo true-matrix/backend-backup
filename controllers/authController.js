@@ -241,6 +241,8 @@ exports.addUser = catchAsync(async (req, res, next) => {
     "password",
     "phone",
     "userRole",
+    "addedBy",
+    "aiStatus",
     "gender"
   );
 
