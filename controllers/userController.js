@@ -1252,7 +1252,9 @@ exports.addOmega = catchAsync(async (req, res, next) => {
     "password",
     "phone",
     "userRole",
+    "selectedSigma",
     "addedBy",
+    "addedByUserRole",
     "aiStatus",
     "gender"
   );
@@ -1320,6 +1322,7 @@ exports.updateOmega = catchAsync(async (req, res, next) => {
       'name',
       'email',
       'phone',
+      'selectedSigma',
       'userRole',
       'gender'
     );
@@ -1359,62 +1362,74 @@ exports.updateOmega = catchAsync(async (req, res, next) => {
   }
 });
 
-//Get all Omega
-// exports.getAllOmega = catchAsync(async (req, res, next) => {
-//   let token;
-//   let remaining_users;
+// Get all Omega
+exports.getAllOmega = catchAsync(async (req, res, next) => {
+  let token;
+  let remaining_users;
 
-//   if (
-//     req.headers.authorization &&
-//     req.headers.authorization.startsWith("Bearer")
-//   ) {
-//     token = req.headers.authorization.split(" ")[1];
-//   } else if (req.cookies.jwt) {
-//     token = req.cookies.jwt;
-//   }
-//   if (!token) {
-//     return res.status(401).json({ message: 'User is already logged out!!!' });
-//   }
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
 
-//   try {
-//     const user = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
 
-//     // Assuming user.userId is present in the decoded JWT payload
-//     const userId = user.userId;
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
 
-//     // Get the logged-in user details
-//     const loggedInUser = await User.findById(userId);
+    // Get the logged-in user details
+    const loggedInUser = await User.findById(userId);
 
-//     // Check conditions based on the User Schema or Model
-//     if (
-//       (loggedInUser.userRole === 'alpha')
-//     ) {
-//       // Retrieve users based on conditions (addedBy == loggedInUser._id and userRole === 'sigma')
-//       remaining_users = await User.find({
-//         addedBy: loggedInUser._id,
-//         userRole: 'sigma',
-//       });
-//       next();
-//     } else if (
-//       loggedInUser.userRole === 'admin') 
-//       {
-//       remaining_users = await User.find({
-//         userRole: 'sigma',
-//       });
-//       next();
-//     } else {
-//       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
-//     }
-//   } catch (error) {
-//     return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-//   }
+    // Check conditions based on the User Schema or Model
+    if (
+      (loggedInUser.userRole === 'sigma')
+    ) {
+      // Retrieve users based on conditions ((addedBy == loggedInUser._id and userRole === 'omega') || (selectedSigma == loggedInUser._id and userRole === 'omega'))
+      remaining_users = await User.find({
+        $or: [
+          { addedBy: loggedInUser._id, userRole: 'omega' },
+          { selectedSigma: loggedInUser._id, userRole: 'omega' },
+        ],
+      });
+      next();
+    }else if (
+      loggedInUser.userRole === 'alpha') 
+      {
+      remaining_users = await User.find({
+        $or: [
+          { addedBy: loggedInUser._id, userRole: 'omega' },
+          // { selectedSigma: loggedInUser._id, userRole: 'omega' },
+        ],
+      });
+      next();
+    } else if (
+      loggedInUser.userRole === 'admin') 
+      {
+      remaining_users = await User.find({
+        userRole: 'omega',
+      });
+      next();
+    } else {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+  } catch (error) {
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
 
-//   res.status(200).json({
-//     status: "success",
-//     data: remaining_users,
-//     message: "Users found successfully!",
-//   });
-// });
+  res.status(200).json({
+    status: "success",
+    data: remaining_users,
+    message: "Users found successfully!",
+  });
+});
 
 
 

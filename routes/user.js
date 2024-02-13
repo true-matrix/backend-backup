@@ -73,6 +73,11 @@ router.delete("/sigma/:id",authController.protect,  userController.deleteSigma);
 router.post("/sigma/update-sigma/:userId",authController.protect,  userController.updateSigma);
 router.get("/sigma/get-all-sigmas",authController.protect,  userController.getAllSigma);
 
+//Omega
+router.post("/omega/addomega",authController.protect,  userController.addOmega);
+router.delete("/omega/:id",authController.protect,  userController.deleteOmega);
+router.post("/omega/update-omega/:userId",authController.protect,  userController.updateOmega);
+router.get("/omega/get-all-omegas",authController.protect,  userController.getAllOmega);
 
 //Conversation
 router.post("/conversations",authController.protect,  conversationController.newConversation);

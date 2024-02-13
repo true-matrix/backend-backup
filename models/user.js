@@ -22,7 +22,13 @@ const userSchema = new mongoose.Schema({
   userRole: {
     type: String,
   },
+  selectedSigma: {
+    type: String,
+  },
   addedBy: {
+    type: String,
+  },
+  addedByUserRole: {
     type: String,
   },
   aiStatus: {
