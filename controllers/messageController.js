@@ -208,6 +208,54 @@ exports.createGroup =catchAsync(async (req, res) => {
   }
 });
 
+exports.updateGroup = catchAsync(async (req, res) => {
+  try {
+    const groupId = req.params.groupId; // Assuming you have the groupId in the request parameters
+    const { groupname, description, admin, members } = req.body;
+
+    if (!groupname || !admin || !members || !Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    const [adminUser, ...memberUsers] = await Promise.all([
+      User.findById(admin),
+      ...members.map(memberId => User.findById(memberId)),
+    ]);
+
+    if (!adminUser || memberUsers.some(user => !user)) {
+      return res.status(400).json({ error: 'Invalid user ID(s)' });
+    }
+
+    const groupToUpdate = await Group.findById(groupId);
+
+    if (!groupToUpdate) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Update group properties
+    groupToUpdate.groupname = groupname;
+    groupToUpdate.description = description;
+    groupToUpdate.admin = adminUser.toObject();
+    groupToUpdate.members = memberUsers.map(user => user.toObject());
+
+    // Save the updated group
+    await groupToUpdate.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: groupToUpdate,
+      message: 'Group updated successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+});
+
+
 //Get all groups for the logged-in user
 // exports.getAllGroups =catchAsync(async (req, res) => {
 //   try{
