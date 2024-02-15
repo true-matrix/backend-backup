@@ -1431,6 +1431,114 @@ exports.getAllOmega = catchAsync(async (req, res, next) => {
   });
 });
 
+///************************************Contacts******************************************///
+//Get all Contacts
+exports.getAllContacts = catchAsync(async (req, res, next) => {
+  let token;
+  let remaining_users;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+
+    // Get the logged-in user details
+    const loggedInUser = await User.findById(userId);
+
+     // Check conditions based on the User Schema or Model
+     if (loggedInUser.userRole === 'admin') {
+      // Retrieve all omegas
+      remaining_users = await User.find({
+        userRole: 'alpha',
+      });
+      next();
+    } else if (loggedInUser.userRole === 'alpha') {
+      const sigmaIdsAddedByAlpha = await User.find({
+        addedBy: loggedInUser._id,
+        userRole: 'sigma',
+      }).distinct('_id');
+      // console.log('sigmaIdsAddedByAlpha=>',sigmaIdsAddedByAlpha);
+      // Retrieve omegas added by the alpha
+      remaining_users = await User.find({
+        $or: [
+          {addedBy: loggedInUser._id, userRole: 'sigma'},
+          {addedBy: loggedInUser._id, userRole: 'omega'},
+          {addedBy: { $in: sigmaIdsAddedByAlpha },userRole: 'omega'},
+      ]
+      });
+      next();
+    } else if (loggedInUser.userRole === 'sigma') {
+      // Retrieve sigmas added by the user who added the current omega
+      const addedByUser = await User.findOne({
+        _id: loggedInUser.addedBy,
+      });
+      // Retrieve omegas added by sigma or selectedSigma is sigma
+      remaining_users = await User.find({
+        $or: [
+          { addedBy: loggedInUser._id, userRole: 'omega' }, // all omegas added by this sigma
+          { selectedSigma: loggedInUser._id, userRole: 'omega' }, // all omegas whose selectedSigma is this sigma
+          { addedBy: addedByUser._id, userRole: 'sigma' }, // all sigmas whose addedBy is this sigmas addedBy
+          { _id: addedByUser._id, userRole: 'alpha' }, // alpha who added this sigma
+          { _id: addedByUser._id, userRole: 'admin' }, // alpha who added this sigma
+        ],
+        _id: { $ne: loggedInUser._id }, // Exclude the current sigma for the logged-in sigma
+      });
+      next();
+    } else if (loggedInUser.userRole === 'omega') {
+      // Find the sigma or alpha or admin who added this omega
+    const userAddedThisOmega = await User.findOne({
+      $or: [
+        // Check if loggedInUser.addedBy is a non-empty string before using it
+        loggedInUser.addedBy && {_id: loggedInUser.addedBy, userRole: 'sigma'},
+        // Check if loggedInUser.selectedSigma is a non-empty string before using it
+        loggedInUser?.selectedSigma && {_id: loggedInUser.selectedSigma, userRole: 'sigma'},
+      ].filter(Boolean),
+    });
+    if (userAddedThisOmega && userAddedThisOmega._id) {
+      remaining_users = await User.find({
+          $or: [
+              { addedBy: userAddedThisOmega._id, userRole: 'omega' },
+              { selectedSigma: userAddedThisOmega._id, userRole: 'omega' },
+              loggedInUser?.addedBy && { _id: loggedInUser.addedBy, userRole: 'sigma' },
+              loggedInUser?.selectedSigma && { _id: loggedInUser.selectedSigma, userRole: 'sigma' },
+          ].filter(Boolean),
+
+          _id: { $ne: loggedInUser._id },
+      });
+
+      next();
+  }
+    }  else {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+  } catch (error) {
+    console.log('error',error);
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: remaining_users,
+    message: 'Users found successfully!',
+  });
+});
+
+
+
+
 
 
 
