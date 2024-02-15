@@ -104,6 +104,7 @@ router.get("/group/:groupId",authController.protect,  messageController.getGroup
 router.post("/group/sendmessage",authController.protect, uploadFilesMiddleware, messageController.sendGroupMessage);
 router.get("/group/:groupId/messages",authController.protect,  messageController.getGroupMessages);
 router.post("/group/resetUnreadGroupMessage",authController.protect,  userController.resetUnreadGroupMessagesCount);
+router.post("/group/update-group/:groupId",authController.protect,  messageController.updateGroup);
 
 
 
