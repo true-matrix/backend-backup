@@ -79,6 +79,9 @@ router.delete("/omega/:id",authController.protect,  userController.deleteOmega);
 router.post("/omega/update-omega/:userId",authController.protect,  userController.updateOmega);
 router.get("/omega/get-all-omegas",authController.protect,  userController.getAllOmega);
 
+//All Contacts
+router.get("/contacts/get-all-contacts",authController.protect,  userController.getAllContacts);
+
 //Conversation
 router.post("/conversations",authController.protect,  conversationController.newConversation);
 router.get("/conversations/:userId",authController.protect,  conversationController.getConversation);
