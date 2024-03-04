@@ -190,7 +190,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 5px;font-family:arial,helvetica,sans-serif;" align="left">
         
   <!--[if mso]><table width="100%"><tr><td><![endif]-->
-    <h2 style="margin: 0px; color: #141414; line-height: 140%; text-align: center; word-wrap: break-word; font-family: georgia,palatino; font-size: 28px; font-weight: 700;"><span>Hi There ${name}!</span></h2>
+    <h2 style="margin: 0px; color: #141414; line-height: 140%; text-align: center; word-wrap: break-word; font-family: georgia,palatino; font-size: 28px; font-weight: 700;"><span>Hi ${name}!</span></h2>
   <!--[if mso]></td></tr></table><![endif]-->
 
       </td>
@@ -204,7 +204,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 5px;font-family:arial,helvetica,sans-serif;" align="left">
         
   <!--[if mso]><table width="100%"><tr><td><![endif]-->
-    <h2 style="margin: 0px; color: #141414; line-height: 140%; text-align: center; word-wrap: break-word; font-family: 'Open Sans',sans-serif; font-size: 28px; font-weight: 400;"><span><span><span><span><strong>Your Truechat OTP</strong></span></span></span></span></h2>
+    <h2 style="margin: 0px; color: #141414; line-height: 140%; text-align: center; word-wrap: break-word; font-family: 'Open Sans',sans-serif; font-size: 28px; font-weight: 400;"><span><span><span><span><strong>Your Wolfchat OTP</strong></span></span></span></span></h2>
   <!--[if mso]></td></tr></table><![endif]-->
 
       </td>
@@ -234,7 +234,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:0px 10px 117px;font-family:arial,helvetica,sans-serif;" align="left">
         
   <div style="font-size: 14px; color: #0081ff; line-height: 140%; text-align: center; word-wrap: break-word;">
-    <p style="font-size: 14px; line-height: 140%;"><span style="font-size: 18px; line-height: 25.2px;"><strong><span style="font-family: Lato, sans-serif; line-height: 25.2px; font-size: 18px;">Valid For 10 minutes Only!</span></strong></span></p>
+    <p style="font-size: 14px; line-height: 140%;"><span style="font-size: 18px; line-height: 25.2px;"><strong><span style="font-family: Lato, sans-serif; line-height: 25.2px; font-size: 18px;">Valid For 2 minutes Only!</span></strong></span></p>
   </div>
 
       </td>

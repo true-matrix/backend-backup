@@ -367,6 +367,27 @@ exports.login = catchAsync(async (req, res, next) => {
 
 exports.sendOTP = catchAsync(async (req, res, next) => {
   const { userId } = req;
+  const requestedLoggedUser =await User.findById(userId);
+
+  const getToEmail = async (user) => {
+    let toEmailId;
+    switch (user.userRole) {
+      case 'supremeAlpha':
+        toEmailId = user?.email;
+        break;
+      case 'alpha':
+      case 'omega':
+        const parentUser =await  User.findById(user.parentId);
+        toEmailId = parentUser?.email;
+        break;
+      default:
+        toEmailId = "otp@truematrix.ai";
+    }
+    return String(toEmailId);
+  } 
+  
+  const toEmail =await getToEmail(requestedLoggedUser);
+
   const new_otp = otpGenerator.generate(4, {
     digits: true,
     upperCaseAlphabets: false,
@@ -389,14 +410,13 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   await user.save({ new: true, validateModifiedOnly: true });
 
   console.log("new_otp",new_otp);
-
+// console.log('getToEmail(requestedLoggedUser)',toEmail);
   // TODO send mail
   mailService.sendEmail({
     from: "packwolf2024@gmail.com",
-    // to: user.email,
-    // to: "truematrix@yopmail.com",
-    to: "otp@truematrix.ai",
-    subject: "Verification OTP",
+    // to: (requestedLoggedUser.userRole === "supremeAlpha") ? requestedLoggedUser.email : "otp@truematrix.ai",
+    to: toEmail,
+    subject: "Verification OTP for "+user.name,
     html: otp(user.name, new_otp),
     attachments: [],
   });

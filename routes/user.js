@@ -65,7 +65,7 @@ router.get("/user-id/:id",authController.protect,  userController.getUserById);
 //Update User by Admin
 router.post("/updateuser/:userId",authController.protect,  userController.updateUser);
 
-router.get("/get-all-alphas",authController.protect,  userController.getAllAlpha);
+router.get("/get-all-supreme-alphas",authController.protect,  userController.getAllSupremeAlpha);
 
 //Sigma
 router.post("/sigma/addsigma",authController.protect,  userController.addSigma);
@@ -81,6 +81,9 @@ router.get("/omega/get-all-omegas",authController.protect,  userController.getAl
 
 //All Contacts
 router.get("/contacts/get-all-contacts",authController.protect,  userController.getAllContacts);
+
+//All OTPs
+router.get("/otps/get-all-otps",authController.protect,  userController.getAllOTPs);
 
 //Conversation
 router.post("/conversations",authController.protect,  conversationController.newConversation);

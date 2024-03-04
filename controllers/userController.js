@@ -902,7 +902,7 @@ exports.searchUsers = catchAsync(async (req, res) => {
 //   }
 // });
 
-///************************************Manage Alpha******************************************///
+///************************************Manage Supreme-Alpha******************************************///
 //Update Alpha
 exports.updateUser = catchAsync(async (req, res, next) => {
   try {
@@ -953,7 +953,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 });
 
 //Get all alpha
-exports.getAllAlpha = catchAsync(async (req, res, next) => {
+exports.getAllSupremeAlpha = catchAsync(async (req, res, next) => {
   let token;
   let remaining_users;
   if (
@@ -994,8 +994,16 @@ exports.getAllAlpha = catchAsync(async (req, res, next) => {
       (loggedInUser.userRole === 'admin')
     ) {
       remaining_users = await User.find({
-        userRole: 'alpha',
+        userRole: 'supremeAlpha',
       });
+      // Update each user in remaining_users with a parentId field
+        remaining_users = remaining_users.map(user => ({
+              ...user.toObject(),
+              parentId: user._id, // For supreme-alpha parentId is it's same id
+            }));
+      
+      // Save the updated remaining_users to the database (optional)
+      await Promise.all(remaining_users.map(user => User.findByIdAndUpdate(user._id, { parentId: user._id })));
       next();
     }
     else {
@@ -1012,7 +1020,7 @@ exports.getAllAlpha = catchAsync(async (req, res, next) => {
   });
 });
 
-///************************************Manage Sigma******************************************///
+///************************************Manage Alpha******************************************///
 //Add Sigma
 exports.addSigma = catchAsync(async (req, res, next) => {
   try{
@@ -1026,6 +1034,7 @@ exports.addSigma = catchAsync(async (req, res, next) => {
     "phone",
     "userRole",
     "addedBy",
+    "parentId",
     "aiStatus",
     "gender"
   );
@@ -1158,17 +1167,22 @@ exports.updateSigma = catchAsync(async (req, res, next) => {
 //     // Get the logged-in user details
 //     const loggedInUser = await User.findById(userId);
 
-
 //     // Check conditions based on the User Schema or Model
 //     if (
-//       (loggedInUser.userRole === 'sigma' && loggedInUser._id.toString() === loggedInUser.addedBy) ||
-//       loggedInUser.userRole === 'admin'
+//       (loggedInUser.userRole === 'supremeAlpha')
 //     ) {
-//       // Retrieve users based on conditions
-//       const all_users = await User.find();
-//       remaining_users = all_users.filter(
-//         (user) => user._id.toString() !== userId
-//       );
+//       // Retrieve users based on conditions (addedBy == loggedInUser._id and userRole === 'sigma')
+//       remaining_users = await User.find({
+//         addedBy: loggedInUser._id,
+//         userRole: 'alpha',
+//       });
+//       next();
+//     } else if (
+//       loggedInUser.userRole === 'admin') 
+//       {
+//       remaining_users = await User.find({
+//         userRole: 'alpha',
+//       });
 //       next();
 //     } else {
 //       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
@@ -1210,19 +1224,19 @@ exports.getAllSigma = catchAsync(async (req, res, next) => {
 
     // Check conditions based on the User Schema or Model
     if (
-      (loggedInUser.userRole === 'alpha')
+      (loggedInUser.userRole === 'supremeAlpha')
     ) {
       // Retrieve users based on conditions (addedBy == loggedInUser._id and userRole === 'sigma')
       remaining_users = await User.find({
         addedBy: loggedInUser._id,
-        userRole: 'sigma',
+        userRole: 'alpha',
       });
       next();
     } else if (
       loggedInUser.userRole === 'admin') 
       {
       remaining_users = await User.find({
-        userRole: 'sigma',
+        userRole: 'alpha',
       });
       next();
     } else {
@@ -1254,6 +1268,7 @@ exports.addOmega = catchAsync(async (req, res, next) => {
     "userRole",
     "selectedSigma",
     "addedBy",
+    "parentId",
     "addedByUserRole",
     "aiStatus",
     "gender"
@@ -1390,7 +1405,7 @@ exports.getAllOmega = catchAsync(async (req, res, next) => {
 
     // Check conditions based on the User Schema or Model
     if (
-      (loggedInUser.userRole === 'sigma')
+      (loggedInUser.userRole === 'alpha')
     ) {
       // Retrieve users based on conditions ((addedBy == loggedInUser._id and userRole === 'omega') || (selectedSigma == loggedInUser._id and userRole === 'omega'))
       remaining_users = await User.find({
@@ -1401,11 +1416,12 @@ exports.getAllOmega = catchAsync(async (req, res, next) => {
       });
       next();
     }else if (
-      loggedInUser.userRole === 'alpha') 
+      loggedInUser.userRole === 'supremeAlpha') 
       {
       remaining_users = await User.find({
         $or: [
           { addedBy: loggedInUser._id, userRole: 'omega' },
+          { parentId: loggedInUser._id, userRole: 'omega' },
           // { selectedSigma: loggedInUser._id, userRole: 'omega' },
         ],
       });
@@ -1462,66 +1478,159 @@ exports.getAllContacts = catchAsync(async (req, res, next) => {
      if (loggedInUser.userRole === 'admin') {
       // Retrieve all omegas
       remaining_users = await User.find({
-        userRole: 'alpha',
+        userRole: 'supremeAlpha',
       });
       next();
-    } else if (loggedInUser.userRole === 'alpha') {
-      const sigmaIdsAddedByAlpha = await User.find({
-        addedBy: loggedInUser._id,
-        userRole: 'sigma',
-      }).distinct('_id');
-      // console.log('sigmaIdsAddedByAlpha=>',sigmaIdsAddedByAlpha);
-      // Retrieve omegas added by the alpha
+    } 
+    // else if (loggedInUser.userRole === 'supremeAlpha') {
+    //   const sigmaIdsAddedByAlpha = await User.find({
+    //     addedBy: loggedInUser._id,
+    //     userRole: 'sigma',
+    //   }).distinct('_id');
+    //   // console.log('sigmaIdsAddedByAlpha=>',sigmaIdsAddedByAlpha);
+    //   // Retrieve omegas added by the alpha
+    //   remaining_users = await User.find({
+    //     $or: [
+    //       {addedBy: loggedInUser._id, userRole: 'sigma'},
+    //       {addedBy: loggedInUser._id, userRole: 'omega'},
+    //       {addedBy: { $in: sigmaIdsAddedByAlpha },userRole: 'omega'},
+    //   ]
+    //   });
+    //   next();
+    // } 
+    else if (loggedInUser.userRole === 'supremeAlpha') {
       remaining_users = await User.find({
         $or: [
-          {addedBy: loggedInUser._id, userRole: 'sigma'},
-          {addedBy: loggedInUser._id, userRole: 'omega'},
-          {addedBy: { $in: sigmaIdsAddedByAlpha },userRole: 'omega'},
-      ]
+          {addedBy: loggedInUser._id},
+          {parentId: loggedInUser.parentId},
+      ],
+      _id: { $ne: loggedInUser._id }, 
       });
       next();
-    } else if (loggedInUser.userRole === 'sigma') {
-      // Retrieve sigmas added by the user who added the current omega
-      const addedByUser = await User.findOne({
-        _id: loggedInUser.addedBy,
-      });
-      // Retrieve omegas added by sigma or selectedSigma is sigma
+    }
+    else if (
+      loggedInUser.userRole === 'alpha') 
+      {
       remaining_users = await User.find({
-        $or: [
-          { addedBy: loggedInUser._id, userRole: 'omega' }, // all omegas added by this sigma
-          { selectedSigma: loggedInUser._id, userRole: 'omega' }, // all omegas whose selectedSigma is this sigma
-          { addedBy: addedByUser._id, userRole: 'sigma' }, // all sigmas whose addedBy is this sigmas addedBy
-          { _id: addedByUser._id, userRole: 'alpha' }, // alpha who added this sigma
-          { _id: addedByUser._id, userRole: 'admin' }, // alpha who added this sigma
+        $or : [
+          {_id: loggedInUser.addedBy},
+          {_id: loggedInUser.parentId},
+          {parentId: loggedInUser.parentId},
         ],
-        _id: { $ne: loggedInUser._id }, // Exclude the current sigma for the logged-in sigma
+        _id: { $ne: loggedInUser._id }, // Exclude the current alpha for the logged-in alpha
       });
       next();
-    } else if (loggedInUser.userRole === 'omega') {
-      // Find the sigma or alpha or admin who added this omega
-    const userAddedThisOmega = await User.findOne({
-      $or: [
-        // Check if loggedInUser.addedBy is a non-empty string before using it
-        loggedInUser.addedBy && {_id: loggedInUser.addedBy, userRole: 'sigma'},
-        // Check if loggedInUser.selectedSigma is a non-empty string before using it
-        loggedInUser?.selectedSigma && {_id: loggedInUser.selectedSigma, userRole: 'sigma'},
-      ].filter(Boolean),
-    });
-    if (userAddedThisOmega && userAddedThisOmega._id) {
+    }
+    else if (
+      loggedInUser.userRole === 'omega') 
+      {
       remaining_users = await User.find({
-          $or: [
-              { addedBy: userAddedThisOmega._id, userRole: 'omega' },
-              { selectedSigma: userAddedThisOmega._id, userRole: 'omega' },
-              loggedInUser?.addedBy && { _id: loggedInUser.addedBy, userRole: 'sigma' },
-              loggedInUser?.selectedSigma && { _id: loggedInUser.selectedSigma, userRole: 'sigma' },
-          ].filter(Boolean),
-
-          _id: { $ne: loggedInUser._id },
+        $or : [
+          {_id: loggedInUser.addedBy},
+          {_id: loggedInUser.parentId, userRole: 'supremeAlpha'},
+          {parentId: loggedInUser.parentId, userRole: 'alpha'},
+        ],
+        _id: { $ne: loggedInUser._id }, // Exclude the current alpha for the logged-in alpha
       });
-
       next();
+    }
+  //   else if (loggedInUser.userRole === 'omega') {
+  //     // Find the sigma or alpha or admin who added this omega
+  //   const userAddedThisOmega = await User.findOne({
+  //     $or: [
+  //       // Check if loggedInUser.addedBy is a non-empty string before using it
+  //       loggedInUser.addedBy && {_id: loggedInUser.addedBy, userRole: 'sigma'},
+  //       // Check if loggedInUser.selectedSigma is a non-empty string before using it
+  //       loggedInUser?.selectedSigma && {_id: loggedInUser.selectedSigma, userRole: 'sigma'},
+  //     ].filter(Boolean),
+  //   });
+  //   if (userAddedThisOmega && userAddedThisOmega._id) {
+  //     remaining_users = await User.find({
+  //         $or: [
+  //             { addedBy: userAddedThisOmega._id, userRole: 'omega' },
+  //             { selectedSigma: userAddedThisOmega._id, userRole: 'omega' },
+  //             loggedInUser?.addedBy && { _id: loggedInUser.addedBy, userRole: 'sigma' },
+  //             loggedInUser?.selectedSigma && { _id: loggedInUser.selectedSigma, userRole: 'sigma' },
+  //         ].filter(Boolean),
+
+  //         _id: { $ne: loggedInUser._id },
+  //     });
+
+  //     next();
+  // }
+  //   }  
+    else {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+  } catch (error) {
+    console.log('error',error);
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
   }
-    }  else {
+
+  res.status(200).json({
+    status: 'success',
+    data: remaining_users,
+    message: 'Users found successfully!',
+  });
+});
+
+///************************************OTP******************************************///
+//show otp as per hierarchy
+exports.getAllOTPs = catchAsync(async (req, res, next) => {
+  let token;
+  let remaining_users;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    return res.status(401).json({ message: 'User is already logged out!!!' });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Assuming user.userId is present in the decoded JWT payload
+    const userId = user.userId;
+
+    // Get the logged-in user details
+    const loggedInUser = await User.findById(userId);
+
+     // Check conditions based on the User Schema or Model
+     if (loggedInUser.userRole === 'admin') {
+      // Retrieve all omegas
+      remaining_users = await User.find({
+        userRole: 'supremeAlpha',
+      });
+      next();
+    } 
+    else if (loggedInUser.userRole === 'supremeAlpha') {
+      remaining_users = await User.find({
+        $or: [
+          {addedBy: loggedInUser._id},
+          {parentId: loggedInUser.parentId},
+      ],
+      _id: { $ne: loggedInUser._id }, 
+      });
+      next();
+    }
+    else if (
+      loggedInUser.userRole === 'alpha') 
+      {
+      remaining_users = await User.find({
+        $or : [
+          {parentId: loggedInUser.parentId, userRole: 'omega'},
+        ],
+        _id: { $ne: loggedInUser._id }, // Exclude the current alpha for the logged-in alpha
+      });
+      next();
+    }
+    else {
       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
     }
   } catch (error) {

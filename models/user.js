@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
   addedByUserRole: {
     type: String,
   },
+  parentId: {
+    type: String,
+  },
   aiStatus: {
     // active inactive status
     type: String,
